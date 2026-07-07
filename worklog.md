@@ -311,3 +311,28 @@ Stage Summary:
 - Protegido por secret token
 - Zero duplicação de e-mails (controle por campos no banco)
 - Compatível com Vercel serverless (stateless, <1s execução típica)
+
+---
+Task ID: 3
+Agent: main
+Task: Aplicar favicon e logo oficiais da Helora
+
+Work Log:
+- Analisado os SVGs enviados: favicon.svg (ícone folha, #283106) e Logo Helora.svg (wordmark branco + folha + "saúde integrada")
+- favicon.svg copiado para public/ com metadata icons no layout.tsx
+- logo.svg copiado para public/ substituindo placeholder anterior
+- Header.tsx: texto "Hel<span>o</span>ra" substituído por <img> com CSS filter
+  - Estado transparente (hero): brightness-0 invert (branco)
+  - Estado scrolled (fundo branco): brightness-0 (preto)
+- Footer.tsx: logo com brightness-0 invert sobre fundo verde escuro
+- BookingWizard.tsx: logo com brightness-0 sobre fundo branco
+- AdminPanel.tsx: logo com brightness-0 sobre fundo branco
+- Verificação visual com VLM: logo visível nos 3 estados (transparente, scrolled, footer)
+- Favicon: link tag presente no DOM, arquivo serve HTTP 200
+- Zero erros de lint
+
+Stage Summary:
+- Favicon oficial aplicado (folha verde escura)
+- Logo oficial aplicada em Header, Footer, BookingWizard, AdminPanel
+- Adaptação de cor via CSS filter mantém consistência visual
+- Commit e push realizados
