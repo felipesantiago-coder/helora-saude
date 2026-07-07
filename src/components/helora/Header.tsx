@@ -76,13 +76,12 @@ export function Header() {
             aria-label="Voltar ao início"
           >
             <img
-              src="/logo.svg"
+              src="/logo-mark.svg"
               alt="Helora"
-              className={`h-6 sm:h-7 w-auto transition-all duration-300 ${
-                isTransparent
-                  ? 'brightness-0 invert'
-                  : 'brightness-0'
-              }`}
+              className={
+                'h-7 sm:h-8 w-auto transition-all duration-300 ' +
+                (isTransparent ? 'brightness-0 invert' : 'brightness-0')
+              }
             />
           </button>
 

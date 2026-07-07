@@ -178,7 +178,7 @@ export default function AdminPanel() {
       <header className="sticky top-0 z-30 bg-helora-white border-b border-helora-light-gray shadow-warm px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <img
-            src="/logo.svg"
+            src="/logo-mark.svg"
             alt="Helora"
             className="h-6 w-auto brightness-0"
           />

@@ -1103,9 +1103,9 @@ export default function BookingWizard() {
             aria-label="Voltar ao início"
           >
             <img
-              src="/logo.svg"
+              src="/logo-mark.svg"
               alt="Helora"
-              className="h-6 w-auto brightness-0"
+              className="h-7 w-auto brightness-0"
             />
           </button>
           <button
