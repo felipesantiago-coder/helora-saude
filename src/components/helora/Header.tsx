@@ -77,7 +77,7 @@ export function Header() {
           />
           <span
             className={
-              'font-sans text-[9px] sm:text-[10px] tracking-[0.15em] uppercase leading-none mt-0.5 transition-colors duration-300 ' +
+              'font-sans text-[9px] sm:text-[10px] tracking-[0.15em] uppercase leading-none mt-1.5 transition-colors duration-300 ' +
               (isTransparent ? 'text-white/60' : 'text-helora-tan/70')
             }
           >
