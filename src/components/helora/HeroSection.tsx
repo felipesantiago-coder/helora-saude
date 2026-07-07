@@ -17,16 +17,6 @@ export function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-4 text-center py-8 sm:py-12 md:py-16">
-        {/* Tag */}
-        <motion.span
-          className="inline-block font-sans font-medium text-helora-gainsboro/90 uppercase tracking-[0.25em] text-xs md:text-sm mb-5"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
-        >
-          saúde integrada
-        </motion.span>
-
         {/* Heading */}
         <motion.h1
           className="font-serif font-light text-[2rem] sm:text-4xl md:text-6xl lg:text-7xl text-white tracking-tight text-balance mb-3 sm:mb-4 leading-[1.15]"
@@ -96,37 +86,6 @@ export function HeroSection() {
           >
             Conheça a equipe
           </button>
-        </motion.div>
-
-        {/* Trust line */}
-        <motion.p
-          className="mt-6 font-sans text-xs text-helora-gainsboro/40 tracking-[0.2em] uppercase"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.8 }}
-        >
-          Acolhimento seguro e sem pressa
-        </motion.p>
-
-        {/* Decorative animated organic O — the brand's signature element */}
-        <motion.div
-          className="mt-10 flex justify-center"
-          aria-hidden="true"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.5, delay: 1 }}
-        >
-          <motion.span
-            className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full border border-helora-gainsboro/20 text-helora-gainsboro/30 font-serif text-2xl md:text-3xl"
-            animate={{ scale: [1, 1.06, 1], opacity: [0.3, 0.5, 0.3] }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-          >
-            O
-          </motion.span>
         </motion.div>
       </div>
 
