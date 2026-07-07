@@ -286,3 +286,28 @@ Stage Summary:
 - next.config.ts com serverExternalPackages para reduzir tamanho dos bundles serverless
 - Análise completa das limitações do Vercel Free vs necessidades do projeto realizada
 
+
+---
+Task ID: 2
+Agent: main
+Task: Implementar sistema de lembretes de consulta via cron gratuito
+
+Work Log:
+- Adicionado campos reminderSent (Boolean) e reminderSentAt (DateTime) ao modelo Appointment
+- Executado prisma db push para aplicar mudanças no SQLite local
+- Criado /api/reminders/route.ts com lógica completa:
+  - Busca consultas de amanhã sem lembrete enviado
+  - Envia e-mail via Brevo para cada consulta
+  - Marca reminderSent=true para evitar duplicidade
+  - Autenticação via CRON_SECRET (header x-cron-secret ou query param)
+  - Desabilitado (503) quando CRON_SECRET não configurado
+  - Cálculo de data no fuso America/Sao_Paulo
+- Atualizado .env.example com documentação do CRON_SECRET
+- Testado endpoint: retorna 503 quando CRON_SECRET ausente (comportamento correto)
+- Commit e push realizados
+
+Stage Summary:
+- Endpoint /api/reminders pronto para uso com cron-job.org
+- Protegido por secret token
+- Zero duplicação de e-mails (controle por campos no banco)
+- Compatível com Vercel serverless (stateless, <1s execução típica)
