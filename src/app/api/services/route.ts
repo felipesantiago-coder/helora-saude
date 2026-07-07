@@ -1,8 +1,9 @@
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
+    const db = await getDb();
     const services = await db.service.findMany({
       where: { active: true },
       orderBy: { price: 'asc' },

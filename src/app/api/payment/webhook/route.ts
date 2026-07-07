@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { getDb } from '@/lib/db'
 import { publishEvent } from '@/lib/ably-server'
 import { sendAppointmentConfirmation } from '@/lib/brevo'
 
 export async function POST(request: NextRequest) {
   try {
+    const db = await getDb()
     const body = await request.json()
     const { event, payment } = body as {
       event?: string

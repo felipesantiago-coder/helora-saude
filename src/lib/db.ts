@@ -31,7 +31,16 @@ async function createPrismaClient(): Promise<PrismaClient> {
     return new PrismaClient({ adapter, log: logConfig })
   }
 
-  // Fallback: local SQLite
+  // In production, Turso is required (no persistent filesystem on Vercel)
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      '[DB] TURSO_DATABASE_URL is required in production. ' +
+      'Local SQLite cannot be used on Vercel (ephemeral filesystem). ' +
+      'Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in your Vercel environment variables.'
+    )
+  }
+
+  // Development fallback: local SQLite
   return new PrismaClient({ log: logConfig })
 }
 

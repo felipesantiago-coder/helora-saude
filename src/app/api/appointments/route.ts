@@ -1,8 +1,9 @@
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
+    const db = await getDb();
     const body = await request.json();
     const {
       serviceId,
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
+    const db = await getDb();
     const appointments = await db.appointment.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50,
@@ -67,6 +69,7 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const db = await getDb();
     const body = await request.json();
     const { id, status } = body;
 

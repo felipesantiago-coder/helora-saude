@@ -1,8 +1,9 @@
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function POST() {
   try {
+    const db = await getDb();
     const ageRanges = [
       { name: 'crianca', label: 'Criança', minAge: 0, maxAge: 11 },
       { name: 'adolescente', label: 'Adolescente', minAge: 12, maxAge: 17 },
@@ -152,6 +153,7 @@ export async function POST() {
 
 export async function GET() {
   try {
+    const db = await getDb();
     const ageRanges = await db.ageRange.findMany();
     const profiles = await db.profile.findMany();
     const services = await db.service.findMany();

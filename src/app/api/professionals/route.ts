@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { getDb } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
 function calculateAge(birthDateStr: string): number {
@@ -14,6 +14,7 @@ function calculateAge(birthDateStr: string): number {
 
 export async function GET(request: NextRequest) {
   try {
+    const db = await getDb();
     const { searchParams } = new URL(request.url);
     const serviceId = searchParams.get('serviceId');
     const birthDate = searchParams.get('birthDate');
@@ -79,6 +80,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Dados inválidos.' }, { status: 400 });
     }
 
+    const db = await getDb();
     const updated = await db.profile.update({
       where: { id },
       data: { status },
@@ -92,6 +94,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const db = await getDb();
     const { name, email, password, specialty, treatsAllAges, ageRangeIds } = await request.json();
 
     if (!name || !email || !password) {
