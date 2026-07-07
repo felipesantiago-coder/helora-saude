@@ -96,7 +96,7 @@ export async function POST() {
 
       const svc1 = await db.service.create({
         data: {
-          name: 'Primeiro encontro de cuidado',
+          name: 'Primeira sessão de cuidado',
           price: 180,
           description: 'Um espaço inicial para se conhecer e entender como posso te acompanhar. Sem pressa, sem compromisso imediato.',
           duration: 50,
@@ -106,7 +106,7 @@ export async function POST() {
         data: {
           name: 'Sessão individual',
           price: 200,
-          description: 'Encontro contínuo de cuidado, com foco no seu ritmo e nas suas necessidades.',
+          description: 'Sessão contínua de cuidado, com foco no seu ritmo e nas suas necessidades.',
           duration: 60,
         },
       });

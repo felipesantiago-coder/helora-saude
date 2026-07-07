@@ -205,7 +205,7 @@ function StepService() {
           Como podemos te acompanhar?
         </h2>
         <p className="text-helora-tan text-sm leading-relaxed">
-          Selecione o tipo de encontro que faz sentido para você agora.
+          Selecione o tipo de sessão que faz sentido para você agora.
         </p>
       </div>
 
@@ -975,7 +975,7 @@ function StepConfirm() {
           <Check className="w-6 h-6" />
         </div>
         <h2 className="font-serif text-2xl text-helora-dark-coffee mb-2" style={{ letterSpacing: '-0.02em' }}>
-          Seu encontro foi agendado!
+          Sua sessão foi agendada!
         </h2>
         <p className="text-helora-tan text-sm leading-relaxed">
           Você receberá um e-mail de confirmação.

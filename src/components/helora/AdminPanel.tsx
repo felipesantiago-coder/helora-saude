@@ -235,7 +235,7 @@ export default function AdminPanel() {
         {activeTab === 'appointments' && (
           <section aria-label="Agendamentos">
             <h2 className="font-serif text-2xl text-helora-dark-coffee tracking-[-0.02em]">
-              Encontros agendados
+              Sessões agendadas
             </h2>
 
             {/* Stats row */}
@@ -285,7 +285,7 @@ export default function AdminPanel() {
                 <div className="helora-card p-12 flex flex-col items-center justify-center text-center">
                   <div className="organic-o organic-o-large mb-4">O</div>
                   <p className="text-helora-tan font-sans text-sm">
-                    Nenhum encontro agendado ainda.
+                    Nenhuma sessão agendada ainda.
                   </p>
                 </div>
               ) : (

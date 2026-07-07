@@ -67,7 +67,7 @@ export function ServicesSection() {
             Como podemos te acompanhar
           </h2>
           <p className="font-sans text-helora-tan text-base md:text-lg leading-relaxed">
-            Cada encontro é pensado para o seu momento. Escolha o que faz sentido para você agora.
+            Cada sessão é pensada para o seu momento. Escolha o que faz sentido para você agora.
           </p>
         </div>
 

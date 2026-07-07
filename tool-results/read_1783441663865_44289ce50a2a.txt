@@ -1,0 +1,1134 @@
+     1→'use client';
+     2→
+     3→import { useState, useEffect, useCallback, useMemo } from 'react';
+     4→import {
+     5→  ChevronLeft,
+     6→  ChevronRight,
+     7→  Check,
+     8→  ArrowLeft,
+     9→  ArrowRight,
+    10→  Calendar,
+    11→  Clock,
+    12→  User,
+    13→  Mail,
+    14→  Phone,
+    15→} from 'lucide-react';
+    16→import { useBookingStore, useAppStore } from '@/stores/helora-store';
+    17→
+    18→// ─── Date utilities ────────────────────────────────────────────────
+    19→
+    20→const MESES = [
+    21→  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+    22→  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+    23→];
+    24→
+    25→const DIAS_SEMANA = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+    26→
+    27→const DIAS_CURTOS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    28→
+    29→function formatarDataCompleta(dateStr: string): string {
+    30→  const d = new Date(dateStr + 'T12:00:00');
+    31→  const dia = d.getDate();
+    32→  const mes = MESES[d.getMonth()];
+    33→  const ano = d.getFullYear();
+    34→  const diaSemana = DIAS_SEMANA[d.getDay()];
+    35→  return `${diaSemana}, ${dia} de ${mes} de ${ano}`;
+    36→}
+    37→
+    38→function formatarPreco(price: number): string {
+    39→  return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    40→}
+    41→
+    42→function calcularIdade(birthDateStr: string): number {
+    43→  const hoje = new Date();
+    44→  const nascimento = new Date(birthDateStr + 'T12:00:00');
+    45→  let idade = hoje.getFullYear() - nascimento.getFullYear();
+    46→  const diffMes = hoje.getMonth() - nascimento.getMonth();
+    47→  if (diffMes < 0 || (diffMes === 0 && hoje.getDate() < nascimento.getDate())) {
+    48→    idade--;
+    49→  }
+    50→  return idade;
+    51→}
+    52→
+    53→function formatarDataParaInput(dateStr: string): string {
+    54→  if (!dateStr) return '';
+    55→  return dateStr;
+    56→}
+    57→
+    58→// ─── Types ─────────────────────────────────────────────────────────
+    59→
+    60→interface Service {
+    61→  id: string;
+    62→  name: string;
+    63→  price: number;
+    64→  description: string;
+    65→  duration: number;
+    66→}
+    67→
+    68→interface Professional {
+    69→  id: string;
+    70→  name: string;
+    71→  specialty: string | null;
+    72→  bio: string | null;
+    73→}
+    74→
+    75→interface WeeklyAvailability {
+    76→  dayOfWeek: number;
+    77→  startTime: string;
+    78→  endTime: string;
+    79→}
+    80→
+    81→// ─── Spinner ───────────────────────────────────────────────────────
+    82→
+    83→function OrganicSpinner() {
+    84→  return (
+    85→    <div className="flex items-center justify-center py-12">
+    86→      <span
+    87→        className="organic-o organic-o-large animate-spin"
+    88→        style={{ animationDuration: '2s' }}
+    89→      >
+    90→        O
+    91→      </span>
+    92→    </div>
+    93→  );
+    94→}
+    95→
+    96→// ─── Step Progress Indicator ───────────────────────────────────────
+    97→
+    98→const STEPS = ['Serviço', 'Seus dados', 'Data e hora', 'Confirmação'];
+    99→
+   100→function StepIndicator({ currentStep }: { currentStep: number }) {
+   101→  return (
+   102→    <div className="mb-8 md:mb-10">
+   103→      <div className="flex items-center justify-between max-w-md mx-auto">
+   104→        {STEPS.map((label, i) => {
+   105→          const stepNum = i + 1;
+   106→          const isCompleted = stepNum < currentStep;
+   107→          const isActive = stepNum === currentStep;
+   108→          const isFuture = stepNum > currentStep;
+   109→
+   110→          return (
+   111→            <div key={label} className="flex items-center flex-1 last:flex-none">
+   112→              <div className="flex flex-col items-center gap-1.5">
+   113→                <div
+   114→                  className={`w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 ${
+   115→                    isCompleted
+   116→                      ? 'bg-helora-sage text-white'
+   117→                      : isActive
+   118→                        ? 'bg-helora-sage text-white'
+   119→                        : 'bg-helora-gainsboro text-helora-tan'
+   120→                  }`}
+   121→                >
+   122→                  {isCompleted ? <Check className="w-4 h-4" /> : stepNum}
+   123→                </div>
+   124→                <span
+   125→                  className={`text-xs hidden md:block transition-colors duration-200 ${
+   126→                    isActive
+   127→                      ? 'text-helora-dark-coffee font-medium'
+   128→                      : isCompleted
+   129→                        ? 'text-helora-sage'
+   130→                        : 'text-helora-tan'
+   131→                  }`}
+   132→                >
+   133→                  {label}
+   134→                </span>
+   135→              </div>
+   136→              {i < STEPS.length - 1 && (
+   137→                <div
+   138→                  className={`flex-1 h-0.5 mx-2 md:mx-3 rounded-full transition-colors duration-200 ${
+   139→                    stepNum < currentStep
+   140→                      ? 'bg-helora-sage'
+   141→                      : 'bg-helora-gainsboro'
+   142→                  }`}
+   143→                />
+   144→              )}
+   145→            </div>
+   146→          );
+   147→        })}
+   148→      </div>
+   149→    </div>
+   150→  );
+   151→}
+   152→
+   153→// ─── Step 1: Service Selection ─────────────────────────────────────
+   154→
+   155→function StepService() {
+   156→  const [services, setServices] = useState<Service[]>([]);
+   157→  const [loading, setLoading] = useState(true);
+   158→  const [error, setError] = useState(false);
+   159→  const { serviceId, setService, setStep } = useBookingStore();
+   160→
+   161→  useEffect(() => {
+   162→    let cancelled = false;
+   163→    async function fetchServices() {
+   164→      try {
+   165→        const res = await fetch('/api/services');
+   166→        if (!res.ok) throw new Error();
+   167→        const data = await res.json();
+   168→        if (!cancelled) setServices(data);
+   169→      } catch {
+   170→        if (!cancelled) setError(true);
+   171→      } finally {
+   172→        if (!cancelled) setLoading(false);
+   173→      }
+   174→    }
+   175→    fetchServices();
+   176→    return () => { cancelled = true; };
+   177→  }, []);
+   178→
+   179→  const handleSelect = (service: Service) => {
+   180→    setService(service.id, service.name, service.price);
+   181→  };
+   182→
+   183→  if (loading) return <OrganicSpinner />;
+   184→
+   185→  if (error) {
+   186→    return (
+   187→      <div className="text-center py-12">
+   188→        <p className="text-helora-sienna mb-4">
+   189→          Algo deu errado. Vamos tentar juntos novamente?
+   190→        </p>
+   191→        <button
+   192→          onClick={() => window.location.reload()}
+   193→          className="btn-pill bg-helora-sage text-white px-6 py-2.5 text-sm font-medium hover:bg-helora-dark-green transition-colors duration-200"
+   194→        >
+   195→          Tentar novamente
+   196→        </button>
+   197→      </div>
+   198→    );
+   199→  }
+   200→
+   201→  return (
+   202→    <div>
+   203→      <div className="text-center mb-8">
+   204→        <h2 className="font-serif text-2xl text-helora-dark-coffee mb-2" style={{ letterSpacing: '-0.02em' }}>
+   205→          Como podemos te acompanhar?
+   206→        </h2>
+   207→        <p className="text-helora-tan text-sm leading-relaxed">
+   208→          Selecione o tipo de encontro que faz sentido para você agora.
+   209→        </p>
+   210→      </div>
+   211→
+   212→      <div className="grid gap-3 mb-6">
+   213→        {services.map((service) => {
+   214→          const isSelected = serviceId === service.id;
+   215→          return (
+   216→            <button
+   217→              key={service.id}
+   218→              type="button"
+   219→              onClick={() => handleSelect(service)}
+   220→              className={`helora-card p-4 text-left cursor-pointer transition-all duration-200 ${
+   221→                isSelected
+   222→                  ? 'border-helora-sage ring-2 ring-helora-sage/30 hover:transform-none'
+   223→                  : 'hover:border-helora-light-gray'
+   224→              }`}
+   225→            >
+   226→              <div className="flex items-start justify-between gap-4">
+   227→                <div className="flex-1">
+   228→                  <h3 className="font-serif text-lg text-helora-dark-coffee mb-1" style={{ letterSpacing: '-0.02em' }}>
+   229→                    {service.name}
+   230→                  </h3>
+   231→                  <p className="text-sm text-helora-tan leading-relaxed">
+   232→                    {service.description}
+   233→                  </p>
+   234→                </div>
+   235→                <span className="text-helora-sienna font-semibold text-sm whitespace-nowrap">
+   236→                  {formatarPreco(service.price)}
+   237→                </span>
+   238→              </div>
+   239→            </button>
+   240→          );
+   241→        })}
+   242→      </div>
+   243→
+   244→      <div className="flex flex-col items-center gap-4">
+   245→        <button
+   246→          type="button"
+   247→          disabled={!serviceId}
+   248→          onClick={() => setStep(2)}
+   249→          className="btn-pill bg-helora-sage text-white px-8 py-3 text-sm font-medium hover:bg-helora-dark-green transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-helora-sage flex items-center gap-2"
+   250→        >
+   251→          Avançar
+   252→          <ArrowRight className="w-4 h-4" />
+   253→        </button>
+   254→        <button
+   255→          type="button"
+   256→          onClick={() => useAppStore.getState().setView('public')}
+   257→          className="text-helora-tan text-sm hover:text-helora-dark-coffee transition-colors duration-200"
+   258→        >
+   259→          Voltar ao início
+   260→        </button>
+   261→      </div>
+   262→    </div>
+   263→  );
+   264→}
+   265→
+   266→// ─── Step 2: Patient Data ──────────────────────────────────────────
+   267→
+   268→function StepData() {
+   269→  const {
+   270→    serviceId,
+   271→    patientName,
+   272→    patientEmail,
+   273→    patientPhone,
+   274→    patientCpf,
+   275→    patientBirthDate,
+   276→    professionalId,
+   277→    setPatientData,
+   278→    setProfessional,
+   279→    setStep,
+   280→  } = useBookingStore();
+   281→
+   282→  const [formName, setFormName] = useState(patientName);
+   283→  const [formEmail, setFormEmail] = useState(patientEmail);
+   284→  const [formPhone, setFormPhone] = useState(patientPhone);
+   285→  const [formCpf, setFormCpf] = useState(patientCpf);
+   286→  const [formBirthDate, setFormBirthDate] = useState(patientBirthDate);
+   287→
+   288→  const [professionals, setProfessionals] = useState<Professional[]>([]);
+   289→  const [noProfessionals, setNoProfessionals] = useState(false);
+   290→  const [loadingProfs, setLoadingProfs] = useState(false);
+   291→  const [selectedProfId, setSelectedProfId] = useState(professionalId || '');
+   292→  const [ageCalculated, setAgeCalculated] = useState(false);
+   293→  const [formErrors, setFormErrors] = useState<Record<string, boolean>>({});
+   294→
+   295→  // Sync store values if returning to this step
+   296→  useEffect(() => {
+   297→    setFormName(patientName);
+   298→    setFormEmail(patientEmail);
+   299→    setFormPhone(patientPhone);
+   300→    setFormCpf(patientCpf);
+   301→    setFormBirthDate(patientBirthDate);
+   302→    setSelectedProfId(professionalId || '');
+   303→  }, [patientName, patientEmail, patientPhone, patientCpf, patientBirthDate, professionalId]);
+   304→
+   305→  const fetchProfessionals = useCallback(async (birthDate: string) => {
+   306→    if (!serviceId || !birthDate) return;
+   307→    setLoadingProfs(true);
+   308→    setNoProfessionals(false);
+   309→    try {
+   310→      const res = await fetch(
+   311→        `/api/professionals?serviceId=${serviceId}&birthDate=${birthDate}`
+   312→      );
+   313→      if (!res.ok) throw new Error();
+   314→      const data = await res.json();
+   315→      if (data.length === 0) {
+   316→        setNoProfessionals(true);
+   317→        setProfessionals([]);
+   318→        setSelectedProfId('');
+   319→      } else {
+   320→        setProfessionals(data);
+   321→        // Pre-select if we already had a selection
+   322→        if (professionalId && data.find((p: Professional) => p.id === professionalId)) {
+   323→          setSelectedProfId(professionalId);
+   324→        } else {
+   325→          setSelectedProfId('');
+   326→        }
+   327→      }
+   328→    } catch {
+   329→      setNoProfessionals(true);
+   330→      setProfessionals([]);
+   331→    } finally {
+   332→      setLoadingProfs(false);
+   333→    }
+   334→  }, [serviceId, professionalId]);
+   335→
+   336→  const handleBirthDateBlur = () => {
+   337→    if (formBirthDate && !ageCalculated) {
+   338→      setAgeCalculated(true);
+   339→      fetchProfessionals(formBirthDate);
+   340→    }
+   341→  };
+   342→
+   343→  const handleBirthDateChange = (value: string) => {
+   344→    setFormBirthDate(value);
+   345→    setAgeCalculated(false);
+   346→  };
+   347→
+   348→  const handleAdvance = () => {
+   349→    const errors: Record<string, boolean> = {};
+   350→    if (!formName.trim()) errors.name = true;
+   351→    if (!formEmail.trim()) errors.email = true;
+   352→    if (!formBirthDate) errors.birthDate = true;
+   353→
+   354→    setFormErrors(errors);
+   355→    if (Object.keys(errors).length > 0) return;
+   356→
+   357→    // If birthDate changed, we should have professionals loaded
+   358→    if (formBirthDate && !ageCalculated) {
+   359→      // Force fetch on advance if somehow missed
+   360→      fetchProfessionals(formBirthDate).then(() => {
+   361→        // Will need user to select and click again
+   362→      });
+   363→      return;
+   364→    }
+   365→
+   366→    if (professionals.length > 0 && !selectedProfId) return;
+   367→
+   368→    const selectedProf = professionals.find((p) => p.id === selectedProfId);
+   369→    setPatientData({
+   370→      patientName: formName.trim(),
+   371→      patientEmail: formEmail.trim(),
+   372→      patientPhone: formPhone.trim(),
+   373→      patientCpf: formCpf.trim(),
+   374→      patientBirthDate: formBirthDate,
+   375→    });
+   376→
+   377→    if (selectedProf) {
+   378→      setProfessional(selectedProf.id, selectedProf.name);
+   379→    }
+   380→
+   381→    setStep(3);
+   382→  };
+   383→
+   384→  const canAdvance = useMemo(() => {
+   385→    if (!formName.trim() || !formEmail.trim() || !formBirthDate) return false;
+   386→    if (ageCalculated && professionals.length > 0 && !selectedProfId) return false;
+   387→    if (ageCalculated && noProfessionals) return false;
+   388→    return true;
+   389→  }, [formName, formEmail, formBirthDate, ageCalculated, professionals.length, selectedProfId, noProfessionals]);
+   390→
+   391→  return (
+   392→    <div>
+   393→      <div className="text-center mb-8">
+   394→        <h2 className="font-serif text-2xl text-helora-dark-coffee mb-2" style={{ letterSpacing: '-0.02em' }}>
+   395→          Conte um pouco sobre você
+   396→        </h2>
+   397→        <p className="text-helora-tan text-sm leading-relaxed">
+   398→          Essas informações nos ajudam a encontrar o profissional ideal para você.
+   399→        </p>
+   400→      </div>
+   401→
+   402→      <div className="space-y-4 mb-6">
+   403→        {/* Nome completo */}
+   404→        <div>
+   405→          <label className="helora-label" htmlFor="booking-name">
+   406→            Nome completo
+   407→          </label>
+   408→          <div className="relative">
+   409→            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-helora-tan" />
+   410→            <input
+   411→              id="booking-name"
+   412→              type="text"
+   413→              value={formName}
+   414→              onChange={(e) => setFormName(e.target.value)}
+   415→              className="helora-input pl-10"
+   416→              placeholder="Seu nome"
+   417→              autoComplete="name"
+   418→            />
+   419→          </div>
+   420→          {formErrors.name && (
+   421→            <p className="text-helora-sienna text-xs mt-1">Por favor, informe seu nome.</p>
+   422→          )}
+   423→        </div>
+   424→
+   425→        {/* E-mail */}
+   426→        <div>
+   427→          <label className="helora-label" htmlFor="booking-email">
+   428→            E-mail
+   429→          </label>
+   430→          <div className="relative">
+   431→            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-helora-tan" />
+   432→            <input
+   433→              id="booking-email"
+   434→              type="email"
+   435→              value={formEmail}
+   436→              onChange={(e) => setFormEmail(e.target.value)}
+   437→              className="helora-input pl-10"
+   438→              placeholder="seuemail@exemplo.com"
+   439→              autoComplete="email"
+   440→            />
+   441→          </div>
+   442→          {formErrors.email && (
+   443→            <p className="text-helora-sienna text-xs mt-1">Por favor, informe seu e-mail.</p>
+   444→          )}
+   445→        </div>
+   446→
+   447→        {/* Telefone */}
+   448→        <div>
+   449→          <label className="helora-label" htmlFor="booking-phone">
+   450→            Telefone
+   451→          </label>
+   452→          <div className="relative">
+   453→            <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-helora-tan" />
+   454→            <input
+   455→              id="booking-phone"
+   456→              type="tel"
+   457→              value={formPhone}
+   458→              onChange={(e) => setFormPhone(e.target.value)}
+   459→              className="helora-input pl-10"
+   460→              placeholder="(00) 00000-0000"
+   461→              autoComplete="tel"
+   462→            />
+   463→          </div>
+   464→        </div>
+   465→
+   466→        {/* CPF */}
+   467→        <div>
+   468→          <label className="helora-label" htmlFor="booking-cpf">
+   469→            CPF
+   470→          </label>
+   471→          <input
+   472→            id="booking-cpf"
+   473→            type="text"
+   474→            value={formCpf}
+   475→            onChange={(e) => setFormCpf(e.target.value)}
+   476→            className="helora-input"
+   477→            placeholder="000.000.000-00"
+   478→            inputMode="numeric"
+   479→          />
+   480→        </div>
+   481→
+   482→        {/* Data de nascimento */}
+   483→        <div>
+   484→          <label className="helora-label" htmlFor="booking-birth">
+   485→            Data de nascimento
+   486→          </label>
+   487→          <input
+   488→            id="booking-birth"
+   489→            type="date"
+   490→            value={formatarDataParaInput(formBirthDate)}
+   491→            onChange={(e) => handleBirthDateChange(e.target.value)}
+   492→            onBlur={handleBirthDateBlur}
+   493→            className="helora-input"
+   494→            max={new Date().toISOString().split('T')[0]}
+   495→          />
+   496→          {formErrors.birthDate && (
+   497→            <p className="text-helora-sienna text-xs mt-1">Por favor, informe sua data de nascimento.</p>
+   498→          )}
+   499→        </div>
+   500→
+   501→        {/* Profissional dropdown (shown after birth date) */}
+   502→        {ageCalculated && loadingProfs && <OrganicSpinner />}
+   503→
+   504→        {ageCalculated && !loadingProfs && noProfessionals && (
+   505→          <div className="helora-card p-4 text-center">
+   506→            <p className="text-helora-tan text-sm leading-relaxed">
+   507→              Ainda não temos profissionais disponíveis para esta faixa etária. Entre em contato conosco.
+   508→            </p>
+   509→          </div>
+   510→        )}
+   511→
+   512→        {ageCalculated && !loadingProfs && professionals.length > 0 && (
+   513→          <div>
+   514→            <label className="helora-label" htmlFor="booking-professional">
+   515→              Profissional
+   516→            </label>
+   517→            <select
+   518→              id="booking-professional"
+   519→              value={selectedProfId}
+   520→              onChange={(e) => setSelectedProfId(e.target.value)}
+   521→              className="helora-input appearance-none bg-no-repeat bg-[center_right_12px]"
+   522→              style={{
+   523→                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A39B82' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+   524→              }}
+   525→            >
+   526→              <option value="">Selecione um profissional</option>
+   527→              {professionals.map((p) => (
+   528→                <option key={p.id} value={p.id}>
+   529→                  {p.name}{p.specialty ? ` — ${p.specialty}` : ''}
+   530→                </option>
+   531→              ))}
+   532→            </select>
+   533→          </div>
+   534→        )}
+   535→      </div>
+   536→
+   537→      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+   538→        <button
+   539→          type="button"
+   540→          onClick={() => setStep(1)}
+   541→          className="text-helora-tan text-sm hover:text-helora-dark-coffee transition-colors duration-200 flex items-center gap-1"
+   542→        >
+   543→          <ArrowLeft className="w-4 h-4" />
+   544→          Voltar
+   545→        </button>
+   546→        <button
+   547→          type="button"
+   548→          disabled={!canAdvance}
+   549→          onClick={handleAdvance}
+   550→          className="btn-pill bg-helora-sage text-white px-8 py-3 text-sm font-medium hover:bg-helora-dark-green transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-helora-sage flex items-center gap-2"
+   551→        >
+   552→          Avançar
+   553→          <ArrowRight className="w-4 h-4" />
+   554→        </button>
+   555→      </div>
+   556→    </div>
+   557→  );
+   558→}
+   559→
+   560→// ─── Step 3: Calendar & Time Selection ─────────────────────────────
+   561→
+   562→function StepDateTime() {
+   563→  const {
+   564→    professionalId,
+   565→    appointmentDate,
+   566→    appointmentTime,
+   567→    setDateTime,
+   568→    setStep,
+   569→  } = useBookingStore();
+   570→
+   571→  const today = useMemo(() => new Date(), []);
+   572→  today.setHours(0, 0, 0, 0);
+   573→
+   574→  const [viewMonth, setViewMonth] = useState(() => {
+   575→    const d = new Date();
+   576→    return { month: d.getMonth(), year: d.getFullYear() };
+   577→  });
+   578→  const [availableDays, setAvailableDays] = useState<Set<number>>(new Set());
+   579→  const [loadingAvailability, setLoadingAvailability] = useState(true);
+   580→  const [selectedDate, setSelectedDate] = useState<string | null>(appointmentDate || null);
+   581→  const [slots, setSlots] = useState<string[]>([]);
+   582→  const [loadingSlots, setLoadingSlots] = useState(false);
+   583→  const [selectedTime, setSelectedTime] = useState<string | null>(appointmentTime || null);
+   584→  const [slotsMessage, setSlotsMessage] = useState<string | null>(null);
+   585→
+   586→  // Fetch professional availability (weekly schedule)
+   587→  useEffect(() => {
+   588→    if (!professionalId) return;
+   589→    let cancelled = false;
+   590→    async function fetchAvailability() {
+   591→      setLoadingAvailability(true);
+   592→      try {
+   593→        const res = await fetch(`/api/availability?professionalId=${professionalId}`);
+   594→        if (!res.ok) throw new Error();
+   595→        const data: WeeklyAvailability[] = await res.json();
+   596→        if (!cancelled) {
+   597→          const days = new Set(data.map((a) => a.dayOfWeek));
+   598→          setAvailableDays(days);
+   599→        }
+   600→      } catch {
+   601→        if (!cancelled) setAvailableDays(new Set());
+   602→      } finally {
+   603→        if (!cancelled) setLoadingAvailability(false);
+   604→      }
+   605→    }
+   606→    fetchAvailability();
+   607→    return () => { cancelled = true; };
+   608→  }, [professionalId]);
+   609→
+   610→  // Generate calendar days for current view
+   611→  const calendarDays = useMemo(() => {
+   612→    const { month, year } = viewMonth;
+   613→    const firstDay = new Date(year, month, 1);
+   614→    // getDay(): 0=Sun, 1=Mon, ... 6=Sat
+   615→    // We want Mon=0, Tue=1, ..., Sat=5 (no Sunday)
+   616→    let startDow = firstDay.getDay(); // 0-6
+   617→    // Convert: Mon(1)->0, Tue(2)->1, Wed(3)->2, Thu(4)->3, Fri(5)->4, Sat(6)->5, Sun(0)->-1
+   618→    let startOffset: number;
+   619→    if (startDow === 0) {
+   620→      startOffset = -1; // Month starts on Sunday — we skip it
+   621→    } else {
+   622→      startOffset = startDow - 1; // Mon=0, Tue=1, ..., Sat=5
+   623→    }
+   624→
+   625→    const daysInMonth = new Date(year, month + 1, 0).getDate();
+   626→    const days: (number | null)[] = [];
+   627→
+   628→    // Fill leading empty cells
+   629→    for (let i = 0; i < startOffset; i++) {
+   630→      days.push(null);
+   631→    }
+   632→
+   633→    // Fill actual days
+   634→    for (let d = 1; d <= daysInMonth; d++) {
+   635→      days.push(d);
+   636→    }
+   637→
+   638→    return days;
+   639→  }, [viewMonth]);
+   640→
+   641→  const monthLabel = `${MESES[viewMonth.month]} ${viewMonth.year}`;
+   642→
+   643→  const goToPrevMonth = () => {
+   644→    setViewMonth((prev) => {
+   645→      const m = prev.month === 0 ? 11 : prev.month - 1;
+   646→      const y = prev.month === 0 ? prev.year - 1 : prev.year;
+   647→      return { month: m, year: y };
+   648→    });
+   649→    setSelectedDate(null);
+   650→    setSlots([]);
+   651→    setSelectedTime(null);
+   652→    setSlotsMessage(null);
+   653→  };
+   654→
+   655→  const goToNextMonth = () => {
+   656→    setViewMonth((prev) => {
+   657→      const m = prev.month === 11 ? 0 : prev.month + 1;
+   658→      const y = prev.month === 11 ? prev.year + 1 : prev.year;
+   659→      return { month: m, year: y };
+   660→    });
+   661→    setSelectedDate(null);
+   662→    setSlots([]);
+   663→    setSelectedTime(null);
+   664→    setSlotsMessage(null);
+   665→  };
+   666→
+   667→  const isDatePast = (day: number): boolean => {
+   668→    const d = new Date(viewMonth.year, viewMonth.month, day);
+   669→    return d < today;
+   670→  };
+   671→
+   672→  const isSunday = (day: number): boolean => {
+   673→    const d = new Date(viewMonth.year, viewMonth.month, day);
+   674→    return d.getDay() === 0;
+   675→  };
+   676→
+   677→  const isDayAvailable = (day: number): boolean => {
+   678→    if (isDatePast(day) || isSunday(day)) return false;
+   679→    const d = new Date(viewMonth.year, viewMonth.month, day);
+   680→    return availableDays.has(d.getDay());
+   681→  };
+   682→
+   683→  const isToday = (day: number): boolean => {
+   684→    const d = new Date(viewMonth.year, viewMonth.month, day);
+   685→    return (
+   686→      d.getDate() === today.getDate() &&
+   687→      d.getMonth() === today.getMonth() &&
+   688→      d.getFullYear() === today.getFullYear()
+   689→    );
+   690→  };
+   691→
+   692→  const isSelectedDay = (day: number): boolean => {
+   693→    if (!selectedDate) return false;
+   694→    const d = new Date(viewMonth.year, viewMonth.month, day);
+   695→    const sel = new Date(selectedDate + 'T12:00:00');
+   696→    return (
+   697→      d.getDate() === sel.getDate() &&
+   698→      d.getMonth() === sel.getMonth() &&
+   699→      d.getFullYear() === sel.getFullYear()
+   700→    );
+   701→  };
+   702→
+   703→  const handleDayClick = async (day: number) => {
+   704→    if (!isDayAvailable(day)) return;
+   705→    const dateStr = `${viewMonth.year}-${String(viewMonth.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+   706→    setSelectedDate(dateStr);
+   707→    setSelectedTime(null);
+   708→    setSlotsMessage(null);
+   709→    setLoadingSlots(true);
+   710→
+   711→    try {
+   712→      const res = await fetch(
+   713→        `/api/slots?professionalId=${professionalId}&date=${dateStr}`
+   714→      );
+   715→      if (!res.ok) throw new Error();
+   716→      const data = await res.json();
+   717→      if (data.message) {
+   718→        setSlotsMessage(data.message);
+   719→        setSlots([]);
+   720→      } else {
+   721→        setSlots(data.slots || []);
+   722→        setSlotsMessage(data.slots?.length === 0 ? 'Nenhum horário disponível neste dia.' : null);
+   723→      }
+   724→    } catch {
+   725→      setSlotsMessage('Algo deu errado. Vamos tentar juntos novamente?');
+   726→      setSlots([]);
+   727→    } finally {
+   728→      setLoadingSlots(false);
+   729→    }
+   730→  };
+   731→
+   732→  const handleTimeSelect = (time: string) => {
+   733→    setSelectedTime(time);
+   734→    if (selectedDate) {
+   735→      setDateTime(selectedDate, time);
+   736→    }
+   737→  };
+   738→
+   739→  const canAdvance = selectedDate && selectedTime;
+   740→
+   741→  return (
+   742→    <div>
+   743→      <div className="text-center mb-8">
+   744→        <h2 className="font-serif text-2xl text-helora-dark-coffee mb-2" style={{ letterSpacing: '-0.02em' }}>
+   745→          Escolha o melhor momento
+   746→        </h2>
+   747→        <p className="text-helora-tan text-sm leading-relaxed">
+   748→          Selecione o dia e horário que melhor combinam com você.
+   749→        </p>
+   750→      </div>
+   751→
+   752→      {loadingAvailability ? (
+   753→        <OrganicSpinner />
+   754→      ) : (
+   755→        <>
+   756→          {/* Calendar */}
+   757→          <div className="helora-card p-4 md:p-6 mb-6">
+   758→            {/* Month navigation */}
+   759→            <div className="flex items-center justify-between mb-4">
+   760→              <button
+   761→                type="button"
+   762→                onClick={goToPrevMonth}
+   763→                className="p-1.5 rounded-full hover:bg-helora-gainsboro transition-colors duration-200 text-helora-dark-coffee"
+   764→                aria-label="Mês anterior"
+   765→              >
+   766→                <ChevronLeft className="w-5 h-5" />
+   767→              </button>
+   768→              <h3 className="font-serif text-lg text-helora-dark-coffee" style={{ letterSpacing: '-0.02em' }}>
+   769→                {monthLabel}
+   770→              </h3>
+   771→              <button
+   772→                type="button"
+   773→                onClick={goToNextMonth}
+   774→                className="p-1.5 rounded-full hover:bg-helora-gainsboro transition-colors duration-200 text-helora-dark-coffee"
+   775→                aria-label="Próximo mês"
+   776→              >
+   777→                <ChevronRight className="w-5 h-5" />
+   778→              </button>
+   779→            </div>
+   780→
+   781→            {/* Day headers */}
+   782→            <div className="grid grid-cols-6 gap-1 mb-2">
+   783→              {DIAS_CURTOS.map((dia) => (
+   784→                <div
+   785→                  key={dia}
+   786→                  className="text-center text-xs font-medium text-helora-tan py-1"
+   787→                >
+   788→                  {dia}
+   789→                </div>
+   790→              ))}
+   791→            </div>
+   792→
+   793→            {/* Day grid */}
+   794→            <div className="grid grid-cols-6 gap-1">
+   795→              {calendarDays.map((day, idx) => {
+   796→                if (day === null) {
+   797→                  return <div key={`empty-${idx}`} className="h-9 md:h-10" />;
+   798→                }
+   799→
+   800→                const past = isDatePast(day);
+   801→                const sunday = isSunday(day);
+   802→                const available = isDayAvailable(day);
+   803→                const todayClass = isToday(day);
+   804→                const selected = isSelectedDay(day);
+   805→
+   806→                let dayClasses = 'h-9 md:h-10 rounded-lg flex items-center justify-center text-sm transition-all duration-200 ';
+   807→
+   808→                if (sunday) {
+   809→                  dayClasses += 'text-helora-light-gray line-through cursor-default ';
+   810→                } else if (past) {
+   811→                  dayClasses += 'text-helora-light-gray cursor-default ';
+   812→                } else if (selected) {
+   813→                  dayClasses += 'bg-helora-sage text-white font-medium cursor-pointer ';
+   814→                } else if (available) {
+   815→                  dayClasses += 'text-helora-dark-coffee hover:bg-helora-sage/10 cursor-pointer ';
+   816→                  if (todayClass) {
+   817→                    dayClasses += 'border-2 border-helora-tan ';
+   818→                  }
+   819→                } else {
+   820→                  dayClasses += 'text-helora-light-gray cursor-default ';
+   821→                  if (todayClass) {
+   822→                    dayClasses += 'border-2 border-helora-tan ';
+   823→                  }
+   824→                }
+   825→
+   826→                return (
+   827→                  <button
+   828→                    key={day}
+   829→                    type="button"
+   830→                    disabled={!available && !selected}
+   831→                    onClick={() => handleDayClick(day)}
+   832→                    className={dayClasses}
+   833→                  >
+   834→                    {day}
+   835→                  </button>
+   836→                );
+   837→              })}
+   838→            </div>
+   839→          </div>
+   840→
+   841→          {/* Slots */}
+   842→          {selectedDate && loadingSlots && <OrganicSpinner />}
+   843→
+   844→          {selectedDate && !loadingSlots && slotsMessage && (
+   845→            <div className="helora-card p-4 text-center mb-6">
+   846→              <p className="text-helora-tan text-sm leading-relaxed">
+   847→                {slotsMessage}
+   848→              </p>
+   849→            </div>
+   850→          )}
+   851→
+   852→          {selectedDate && !loadingSlots && slots.length > 0 && (
+   853→            <div className="mb-6">
+   854→              <div className="flex items-center gap-2 mb-3">
+   855→                <Clock className="w-4 h-4 text-helora-sage" />
+   856→                <p className="text-sm font-medium text-helora-dark-coffee">
+   857→                  Horários disponíveis
+   858→                </p>
+   859→              </div>
+   860→              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+   861→                {slots.map((slot) => (
+   862→                  <button
+   863→                    key={slot}
+   864→                    type="button"
+   865→                    onClick={() => handleTimeSelect(slot)}
+   866→                    className={`helora-card p-3 text-center cursor-pointer transition-all duration-200 text-sm ${
+   867→                      selectedTime === slot
+   868→                        ? 'bg-helora-sage text-white hover:transform-none'
+   869→                        : 'text-helora-dark-coffee hover:border-helora-sage'
+   870→                    }`}
+   871→                  >
+   872→                    {slot}
+   873→                  </button>
+   874→                ))}
+   875→              </div>
+   876→            </div>
+   877→          )}
+   878→        </>
+   879→      )}
+   880→
+   881→      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+   882→        <button
+   883→          type="button"
+   884→          onClick={() => setStep(2)}
+   885→          className="text-helora-tan text-sm hover:text-helora-dark-coffee transition-colors duration-200 flex items-center gap-1"
+   886→        >
+   887→          <ArrowLeft className="w-4 h-4" />
+   888→          Voltar
+   889→        </button>
+   890→        <button
+   891→          type="button"
+   892→          disabled={!canAdvance}
+   893→          onClick={() => {
+   894→            if (selectedDate && selectedTime) {
+   895→              setDateTime(selectedDate, selectedTime);
+   896→              setStep(4);
+   897→            }
+   898→          }}
+   899→          className="btn-pill bg-helora-sage text-white px-8 py-3 text-sm font-medium hover:bg-helora-dark-green transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-helora-sage flex items-center gap-2"
+   900→        >
+   901→          Avançar
+   902→          <ArrowRight className="w-4 h-4" />
+   903→        </button>
+   904→      </div>
+   905→    </div>
+   906→  );
+   907→}
+   908→
+   909→// ─── Step 4: Confirmation ──────────────────────────────────────────
+   910→
+   911→function StepConfirm() {
+   912→  const {
+   913→    serviceName,
+   914→    servicePrice,
+   915→    professionalName,
+   916→    appointmentDate,
+   917→    appointmentTime,
+   918→    patientName,
+   919→    patientEmail,
+   920→    patientPhone,
+   921→    serviceId,
+   922→    professionalId,
+   923→    patientCpf,
+   924→    patientBirthDate,
+   925→    reset,
+   926→    setStep,
+   927→  } = useBookingStore();
+   928→
+   929→  const [submitting, setSubmitting] = useState(false);
+   930→  const [success, setSuccess] = useState(false);
+   931→  const [error, setError] = useState(false);
+   932→
+   933→  const handleConfirm = async () => {
+   934→    setSubmitting(true);
+   935→    setError(false);
+   936→
+   937→    try {
+   938→      const res = await fetch('/api/appointments', {
+   939→        method: 'POST',
+   940→        headers: { 'Content-Type': 'application/json' },
+   941→        body: JSON.stringify({
+   942→          serviceId,
+   943→          serviceName,
+   944→          price: servicePrice,
+   945→          patientName,
+   946→          patientEmail,
+   947→          patientPhone,
+   948→          patientCpf,
+   949→          patientBirthDate,
+   950→          professionalId,
+   951→          professionalName,
+   952→          appointmentDate,
+   953→          appointmentTime,
+   954→        }),
+   955→      });
+   956→
+   957→      if (!res.ok) throw new Error();
+   958→
+   959→      setSuccess(true);
+   960→      setTimeout(() => {
+   961→        reset();
+   962→        useAppStore.getState().setView('public');
+   963→      }, 2500);
+   964→    } catch {
+   965→      setError(true);
+   966→    } finally {
+   967→      setSubmitting(false);
+   968→    }
+   969→  };
+   970→
+   971→  if (success) {
+   972→    return (
+   973→      <div className="text-center py-8">
+   974→        <div className="organic-o organic-o-large mx-auto mb-4 bg-helora-sage text-white border-helora-sage">
+   975→          <Check className="w-6 h-6" />
+   976→        </div>
+   977→        <h2 className="font-serif text-2xl text-helora-dark-coffee mb-2" style={{ letterSpacing: '-0.02em' }}>
+   978→          Seu encontro foi agendado!
+   979→        </h2>
+   980→        <p className="text-helora-tan text-sm leading-relaxed">
+   981→          Você receberá um e-mail de confirmação.
+   982→        </p>
+   983→      </div>
+   984→    );
+   985→  }
+   986→
+   987→  return (
+   988→    <div>
+   989→      <div className="text-center mb-8">
+   990→        <h2 className="font-serif text-2xl text-helora-dark-coffee mb-2" style={{ letterSpacing: '-0.02em' }}>
+   991→          Vamos conferir juntos
+   992→        </h2>
+   993→        <p className="text-helora-tan text-sm leading-relaxed">
+   994→          Confira se tudo está como você gostaria.
+   995→        </p>
+   996→      </div>
+   997→
+   998→      {/* Summary card */}
+   999→      <div className="helora-card p-6 mb-6">
+  1000→        <div className="space-y-4">
+  1001→          <div className="flex justify-between items-start">
+  1002→            <div>
+  1003→              <p className="helora-label text-helora-tan">Serviço</p>
+  1004→              <p className="text-helora-dark-coffee font-medium">{serviceName}</p>
+  1005→            </div>
+  1006→            <p className="text-helora-sienna font-semibold text-xl">
+  1007→              {formatarPreco(servicePrice)}
+  1008→            </p>
+  1009→          </div>
+  1010→
+  1011→          <div className="border-t border-helora-gainsboro" />
+  1012→
+  1013→          <div>
+  1014→            <p className="helora-label text-helora-tan">Profissional</p>
+  1015→            <p className="text-helora-dark-coffee font-medium">{professionalName}</p>
+  1016→          </div>
+  1017→
+  1018→          <div>
+  1019→            <p className="helora-label text-helora-tan">Data</p>
+  1020→            <p className="text-helora-dark-coffee font-medium">{formatarDataCompleta(appointmentDate)}</p>
+  1021→          </div>
+  1022→
+  1023→          <div>
+  1024→            <p className="helora-label text-helora-tan">Horário</p>
+  1025→            <p className="text-helora-dark-coffee font-medium">{appointmentTime}</p>
+  1026→          </div>
+  1027→
+  1028→          <div className="border-t border-helora-gainsboro" />
+  1029→
+  1030→          <div>
+  1031→            <p className="helora-label text-helora-tan">Nome</p>
+  1032→            <p className="text-helora-dark-coffee font-medium">{patientName}</p>
+  1033→          </div>
+  1034→
+  1035→          <div>
+  1036→            <p className="helora-label text-helora-tan">E-mail</p>
+  1037→            <p className="text-helora-dark-coffee font-medium">{patientEmail}</p>
+  1038→          </div>
+  1039→
+  1040→          <div>
+  1041→            <p className="helora-label text-helora-tan">Telefone</p>
+  1042→            <p className="text-helora-dark-coffee font-medium">{patientPhone || '—'}</p>
+  1043→          </div>
+  1044→        </div>
+  1045→      </div>
+  1046→
+  1047→      {error && (
+  1048→        <div className="helora-card p-4 mb-6 border-helora-sienna/30">
+  1049→          <p className="text-helora-sienna text-sm text-center leading-relaxed">
+  1050→            Algo deu errado ao criar seu agendamento. Vamos tentar juntos novamente?
+  1051→          </p>
+  1052→        </div>
+  1053→      )}
+  1054→
+  1055→      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+  1056→        <button
+  1057→          type="button"
+  1058→          onClick={() => setStep(3)}
+  1059→          className="text-helora-tan text-sm hover:text-helora-dark-coffee transition-colors duration-200 flex items-center gap-1"
+  1060→        >
+  1061→          <ArrowLeft className="w-4 h-4" />
+  1062→          Voltar
+  1063→        </button>
+  1064→        <button
+  1065→          type="button"
+  1066→          disabled={submitting}
+  1067→          onClick={handleConfirm}
+  1068→          className="btn-pill bg-helora-sage text-white px-8 py-3 text-sm font-medium hover:bg-helora-dark-green transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-helora-sage flex items-center gap-2"
+  1069→        >
+  1070→          {submitting ? (
+  1071→            <>
+  1072→              <span
+  1073→                className="organic-o w-5 h-5 text-sm animate-spin"
+  1074→                style={{ animationDuration: '2s' }}
+  1075→              >
+  1076→                O
+  1077→              </span>
+  1078→              Agendando...
+  1079→            </>
+  1080→          ) : (
+  1081→            'Confirmar agendamento'
+  1082→          )}
+  1083→        </button>
+  1084→      </div>
+  1085→    </div>
+  1086→  );
+  1087→}
+  1088→
+  1089→// ─── Main BookingWizard ────────────────────────────────────────────
+  1090→
+  1091→export default function BookingWizard() {
+  1092→  const step = useBookingStore((s) => s.step);
+  1093→  const setView = useAppStore((s) => s.setView);
+  1094→
+  1095→  return (
+  1096→    <div className="min-h-screen flex flex-col bg-helora-antique-white">
+  1097→      {/* Sticky top bar */}
+  1098→      <header className="sticky top-0 z-50 bg-helora-white shadow-warm">
+  1099→        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+  1100→          <button
+  1101→            onClick={() => setView('public')}
+  1102→            className="font-serif text-xl text-helora-dark-coffee tracking-tight focus:outline-none"
+  1103→            aria-label="Voltar ao início"
+  1104→          >
+  1105→            Hel<span className="text-helora-sage">o</span>ra
+  1106→          </button>
+  1107→          <button
+  1108→            onClick={() => setView('public')}
+  1109→            className="font-sans text-sm font-medium text-helora-tan hover:text-helora-dark-coffee transition-colors duration-200 flex items-center gap-1.5 focus:outline-none focus-visible:underline"
+  1110→          >
+  1111→            <ArrowLeft size={16} aria-hidden="true" />
+  1112→            Voltar ao início
+  1113→          </button>
+  1114→        </div>
+  1115→      </header>
+  1116→
+  1117→      <main className="flex-1">
+  1118→        <div className="max-w-2xl mx-auto px-4 py-8 md:py-12">
+  1119→          <StepIndicator currentStep={step} />
+  1120→
+  1121→        <div
+  1122→          className="transition-opacity duration-200"
+  1123→          key={step}
+  1124→        >
+  1125→          {step === 1 && <StepService />}
+  1126→          {step === 2 && <StepData />}
+  1127→          {step === 3 && <StepDateTime />}
+  1128→          {step === 4 && <StepConfirm />}
+  1129→        </div>
+  1130→        </div>
+  1131→      </main>
+  1132→    </div>
+  1133→  );
+  1134→}

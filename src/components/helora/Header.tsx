@@ -63,7 +63,7 @@ export function Header() {
             onClick={handleBooking}
             className="btn-pill bg-helora-sage text-white text-sm font-medium px-5 py-2 hover:bg-helora-dark-green transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50"
           >
-            Agendar encontro
+            Agendar sessão
           </button>
         </nav>
 
@@ -108,7 +108,7 @@ export function Header() {
               onClick={handleBooking}
               className="w-full btn-pill bg-helora-sage text-white text-sm font-medium px-5 py-3 hover:bg-helora-dark-green transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50"
             >
-              Agendar encontro
+              Agendar sessão
             </button>
           </div>
         </nav>

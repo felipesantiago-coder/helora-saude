@@ -46,7 +46,7 @@ export function HeroSection() {
           onClick={() => setView('booking')}
           className="btn-pill bg-helora-sage text-white font-medium py-3 px-8 hover:bg-helora-dark-green transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 text-base shadow-warm-lg"
         >
-          Agendar seu primeiro encontro
+          Agendar sua primeira sessão
         </button>
 
         {/* Decorative animated O */}
