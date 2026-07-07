@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useAppStore } from '@/stores/helora-store'
 import { Header } from '@/components/helora/Header'
 import { HeroSection } from '@/components/helora/HeroSection'
@@ -13,6 +15,20 @@ import { Footer } from '@/components/helora/Footer'
 import BookingWizard from '@/components/helora/BookingWizard'
 import AdminLogin from '@/components/helora/AdminLogin'
 import AdminPanel from '@/components/helora/AdminPanel'
+
+function AdminRouteDetector() {
+  const searchParams = useSearchParams()
+  const setView = useAppStore((s) => s.setView)
+
+  useEffect(() => {
+    const adminParam = searchParams.get('admin')
+    if (adminParam === 'login') {
+      setView('admin-login')
+    }
+  }, [searchParams, setView])
+
+  return null
+}
 
 function PublicPage() {
   return (
@@ -33,7 +49,7 @@ function PublicPage() {
   )
 }
 
-export default function Home() {
+function HomeContent() {
   const view = useAppStore((s) => s.view)
 
   if (view === 'booking') {
@@ -41,7 +57,7 @@ export default function Home() {
       <div className="min-h-screen flex flex-col">
         <BookingWizard />
       </div>
-    );
+    )
   }
 
   if (view === 'admin-login') {
@@ -53,4 +69,15 @@ export default function Home() {
   }
 
   return <PublicPage />
+}
+
+export default function Home() {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <AdminRouteDetector />
+      </Suspense>
+      <HomeContent />
+    </>
+  )
 }

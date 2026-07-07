@@ -1,7 +1,5 @@
 'use client';
 
-import { useAppStore } from '@/stores/helora-store';
-
 const FOOTER_LINKS = [
   { label: 'Início', href: '#hero' },
   { label: 'Conceito', href: '#conceito' },
@@ -18,8 +16,6 @@ function scrollToSection(href: string) {
 }
 
 export function Footer() {
-  const setView = useAppStore((s) => s.setView);
-
   return (
     <footer className="bg-gradient-to-br from-[#283106] to-[#1a2004] text-white mt-auto relative">
       {/* Organic nature wave top — multi-layered flowing curves */}
@@ -64,7 +60,7 @@ export function Footer() {
           Cuidar é a nossa essência.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 relative z-10">
           {/* Logo & tagline */}
           <div>
             <span className="font-serif font-normal text-xl tracking-tight">
@@ -87,19 +83,6 @@ export function Footer() {
               </button>
             ))}
           </nav>
-
-          {/* Professional access */}
-          <div className="flex flex-col gap-3">
-            <span className="font-sans text-sm text-helora-gainsboro/70">
-              Para profissionais
-            </span>
-            <button
-              onClick={() => setView('admin-login')}
-              className="font-sans text-sm font-semibold text-helora-sienna hover:text-helora-sienna/80 transition-colors duration-200 text-left focus:outline-none focus-visible:underline w-fit underline underline-offset-4 decoration-helora-sienna/20 hover:decoration-helora-sienna/50"
-            >
-              Acesso profissional
-            </button>
-          </div>
         </div>
 
         {/* Bottom bar */}
