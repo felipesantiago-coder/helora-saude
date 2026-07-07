@@ -99,6 +99,12 @@ model Appointment {
   appointmentDate  String
   appointmentTime  String
   status           String   @default("pending")
+  paymentId        String?
+  paymentStatus    String?  @default("pending")
+  paymentType      String?  // PIX, CREDIT_CARD, BOLETO
+  invoiceUrl       String?
+  pixQrCode        String?  // base64 encoded PIX QR code image
+  pixPayload       String?  // PIX copy-paste code
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
