@@ -105,6 +105,8 @@ model Appointment {
   invoiceUrl       String?
   pixQrCode        String?  // base64 encoded PIX QR code image
   pixPayload       String?  // PIX copy-paste code
+  reminderSent     Boolean  @default(false)
+  reminderSentAt   DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
