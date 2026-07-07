@@ -7,6 +7,8 @@ import { OrganicDivider } from '@/components/helora/OrganicDivider'
 import { ConceptSection } from '@/components/helora/ConceptSection'
 import { ServicesSection } from '@/components/helora/ServicesSection'
 import { TeamSection } from '@/components/helora/TeamSection'
+import { TestimonialsSection } from '@/components/helora/TestimonialsSection'
+import { CTASection } from '@/components/helora/CTASection'
 import { Footer } from '@/components/helora/Footer'
 import BookingWizard from '@/components/helora/BookingWizard'
 import AdminLogin from '@/components/helora/AdminLogin'
@@ -18,13 +20,13 @@ function PublicPage() {
       <Header />
       <main className="flex-1">
         <HeroSection />
-        <OrganicDivider />
+        <OrganicDivider variant="sage" />
         <ConceptSection />
-        <OrganicDivider />
         <ServicesSection />
-        <OrganicDivider />
+        <OrganicDivider variant="sage" />
         <TeamSection />
-        <OrganicDivider />
+        <TestimonialsSection />
+        <CTASection />
       </main>
       <Footer />
     </div>

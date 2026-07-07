@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ScrollReveal } from './ScrollReveal';
 
 interface Professional {
   id: string;
@@ -51,22 +52,24 @@ export function TeamSection() {
   }, []);
 
   return (
-    <section id="equipe" className="bg-helora-white py-20 md:py-28">
+    <section id="equipe" className="bg-helora-white py-24 md:py-32">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="max-w-2xl mb-12">
-          <h2 className="font-serif font-normal text-2xl md:text-4xl text-helora-dark-green tracking-tight text-balance mb-4">
-            Quem te acompanha
-          </h2>
-          <p className="font-sans text-helora-tan text-base md:text-lg leading-relaxed">
-            Profissionais que escolheram o cuidado como caminho.
-          </p>
-        </div>
+        <ScrollReveal>
+          <div className="max-w-2xl mb-14">
+            <h2 className="font-serif font-normal text-2xl md:text-4xl text-helora-dark-green tracking-tight text-balance mb-4">
+              Quem te acompanha
+            </h2>
+            <p className="font-sans text-helora-tan text-base md:text-lg leading-relaxed">
+              Profissionais que escolheram o cuidado como caminho.
+            </p>
+          </div>
+        </ScrollReveal>
 
         {/* Loading state */}
         {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl">
             {Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="helora-card p-6 space-y-4">
+              <div key={i} className="helora-card space-y-4">
                 <div className="flex items-center gap-4">
                   <Skeleton className="w-14 h-14 rounded-full shrink-0" />
                   <div className="space-y-2 flex-1">
@@ -83,7 +86,7 @@ export function TeamSection() {
 
         {/* Error state */}
         {error && !loading && (
-          <div className="text-center py-12">
+          <div className="text-center py-16">
             <p className="font-sans text-helora-tan text-lg">
               Algo deu errado. Vamos tentar juntos novamente?
             </p>
@@ -98,48 +101,50 @@ export function TeamSection() {
 
         {/* Professional cards */}
         {!loading && !error && professionals.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
-            {professionals.map((person) => (
-              <div key={person.id} className="helora-card p-6 flex flex-col border-l-[3px] border-l-helora-sage">
-                {/* Avatar with initials */}
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-full bg-helora-sage/20 flex items-center justify-center shrink-0">
-                    <span className="font-serif text-lg text-helora-sage font-normal">
-                      {getInitials(person.name)}
-                    </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl">
+            {professionals.map((person, index) => (
+              <ScrollReveal key={person.id} delay={index * 0.12}>
+                <div className="helora-card flex flex-col border-l-[3px] border-l-helora-sage hover:shadow-[0_8px_32px_rgba(119,127,92,0.12)] transition-shadow duration-300">
+                  {/* Avatar with initials */}
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className="w-14 h-14 rounded-full bg-helora-sage/20 flex items-center justify-center shrink-0">
+                      <span className="font-serif text-lg text-helora-sage font-normal">
+                        {getInitials(person.name)}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-serif font-normal text-xl text-helora-dark-coffee tracking-tight">
+                        {person.name}
+                      </h3>
+                      {person.specialty && (
+                        <div className="inline-flex items-center gap-1.5 mt-1 bg-helora-sienna/10 rounded-full px-2.5 py-0.5">
+                          <Heart
+                            size={14}
+                            className="text-helora-sienna"
+                            aria-hidden="true"
+                          />
+                          <span className="font-sans text-sm font-medium text-helora-sienna">
+                            {person.specialty}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-serif font-normal text-xl text-helora-dark-coffee tracking-tight">
-                      {person.name}
-                    </h3>
-                    {person.specialty && (
-                      <div className="inline-flex items-center gap-1.5 mt-0.5 bg-helora-sienna/10 rounded-full px-2.5 py-0.5">
-                        <Heart
-                          size={14}
-                          className="text-helora-sienna"
-                          aria-hidden="true"
-                        />
-                        <span className="font-sans text-sm font-medium text-helora-sienna">
-                          {person.specialty}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
 
-                {person.bio && (
-                  <p className="font-sans text-sm text-helora-tan leading-relaxed mt-3">
-                    {person.bio}
-                  </p>
-                )}
-              </div>
+                  {person.bio && (
+                    <p className="font-sans text-[15px] text-helora-tan leading-relaxed mt-1">
+                      {person.bio}
+                    </p>
+                  )}
+                </div>
+              </ScrollReveal>
             ))}
           </div>
         )}
 
         {/* Empty state */}
         {!loading && !error && professionals.length === 0 && (
-          <div className="text-center py-12">
+          <div className="text-center py-16">
             <p className="font-sans text-helora-tan text-lg">
               Nossa equipe está se formando com carinho. Em breve você conhecerá quem vai te acompanhar.
             </p>

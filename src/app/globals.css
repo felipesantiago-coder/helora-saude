@@ -144,6 +144,69 @@
     height: 1px;
     background: #C7C3AC;
   }
+
+  /* Scroll reveal initial state */
+  .scroll-reveal {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+
+  /* Section wave SVG positioning */
+  .section-wave-top {
+    position: relative;
+  }
+  .section-wave-top > svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    display: block;
+    line-height: 0;
+    margin-top: -1px;
+  }
+  .section-wave-bottom {
+    position: relative;
+  }
+  .section-wave-bottom > svg {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    display: block;
+    line-height: 0;
+    margin-bottom: -1px;
+  }
+
+  /* Ghost button style */
+  .btn-ghost {
+    background: transparent;
+    border: 1.5px solid #C7C3AC;
+    border-radius: 50px;
+    color: #2C241C;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    padding: 12px 28px;
+    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+    cursor: pointer;
+  }
+  .btn-ghost:hover {
+    background: rgba(119, 127, 92, 0.08);
+    border-color: #777F5C;
+    color: #283106;
+  }
+  .btn-ghost:active {
+    transform: scale(0.98);
+  }
+
+  /* Organic blob decoration */
+  .organic-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+  }
 }
 
 /* ── Reusable Components ── */
@@ -152,8 +215,9 @@
     background: #FFFFFF;
     border: 1px solid #C7C3AC;
     border-radius: 16px;
-    box-shadow: 0 4px 16px rgba(44, 36, 28, 0.06);
-    transition: transform 200ms ease, box-shadow 200ms ease;
+    box-shadow: 0 2px 12px rgba(44, 36, 28, 0.04);
+    transition: transform 300ms ease, box-shadow 300ms ease;
+    padding: 24px;
   }
   .helora-card:hover {
     transform: translateY(-4px);
@@ -194,6 +258,10 @@
     transition: none;
   }
   .helora-card:hover {
+    transform: none;
+  }
+  .scroll-reveal {
+    opacity: 1;
     transform: none;
   }
 }
