@@ -153,3 +153,36 @@ Stage Summary:
 - Critical CSS bug fixed: Tailwind v4 @theme inline must use direct values, not var() references
 - All 8 brand colors now rendering correctly: #283106, #777F5C, #9C6146, #2C241C, #A39B82, #C7C3AC, #DFE0DB, #EBE6CC, #FFFFFF
 - Both Paleta Primária (4 greens) and Paleta Secundária (4 earth tones) visually present throughout
+---
+Task ID: termo-sessao
+Agent: main
+Task: Substituir "encontro" por "sessão" em todo o projeto
+
+Work Log:
+- Buscou todas as ocorrências de "encontro" no projeto (10 encontradas em 6 arquivos)
+- Substituiu por "sessão" com concordância gramatical correta em cada contexto
+- Arquivos: seed/route.ts, HeroSection.tsx, BookingWizard.tsx, ServicesSection.tsx, Header.tsx, AdminPanel.tsx
+- Lint passou sem erros
+
+Stage Summary:
+- Termo "sessão" agora usado consistentemente em todo o projeto
+- Zero ocorrências residuais de "encontro"
+---
+Task ID: vercel-optimize
+Agent: main
+Task: Otimizar projeto para deploy no Vercel e preparar push para GitHub
+
+Work Log:
+- next.config.ts: adicionado poweredByHeader=false, security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy), optimizePackageImports (lucide-react, framer-motion, date-fns), image formats (avif, webp)
+- vercel.json: criado com cache headers (API no-store, static assets immutable 1yr), Permissions-Policy, buildCommand com prisma generate
+- package.json: renomeado para "helora" v1.0.0, adicionado postinstall="prisma generate", build="prisma generate && next build", adicionado db:seed script
+- .gitignore: adicionado tool-results/, db/*.db, mini-services/, excluído .env.example do ignore
+- .env.example: criado com template DATABASE_URL (local SQLite + produção cloud)
+- src/lib/db.ts: Prisma logs desativados em produção (apenas error/warn em dev)
+- Commit criado: "chore: otimizar projeto para deploy no Vercel"
+- Push não realizado: sem remote GitHub configurado e sem credenciais no ambiente
+
+Stage Summary:
+- Projeto 100% otimizado para Vercel (headers, cache, build, Prisma, env)
+- Não foi possível fazer push: necessário configurar remote e credenciais GitHub manualmente
+- Comandos fornecidos ao usuário para completar o push
