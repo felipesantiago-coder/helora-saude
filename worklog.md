@@ -266,3 +266,23 @@ Stage Summary:
 - All integrations are graceful: app works without any service configured
 - Each service is independent and can be activated via env vars
 - Commit c48ded1 pushed to GitHub
+---
+Task ID: 1
+Agent: main
+Task: Auditar compatibilidade Vercel e fazer ajustes necessários
+
+Work Log:
+- Leitura completa de next.config.ts, package.json, prisma/schema.prisma, db.ts
+- Leitura de todas as libs de integração: ably-server.ts, brevo.ts, asaas.ts, r2.ts
+- Leitura de todas as API routes de pagamento, webhook, ably-token
+- Análise do tamanho de dependências (node_modules)
+- Verificação do vercel.json existente
+- Identificação do problema: Ably server-side usava Realtime (WebSocket persistente) ao invés de REST (stateless HTTP)
+- Correção: reescrito ably-server.ts para usar Ably.Rest ao invés de Ably.Realtime
+- Otimização: adicionado serverExternalPackages no next.config.ts (sharp, @prisma/client, @libsql/client)
+
+Stage Summary:
+- ably-server.ts agora usa Ably.Rest (stateless, ideal para serverless/Vercel)
+- next.config.ts com serverExternalPackages para reduzir tamanho dos bundles serverless
+- Análise completa das limitações do Vercel Free vs necessidades do projeto realizada
+
