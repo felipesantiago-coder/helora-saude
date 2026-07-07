@@ -61,20 +61,28 @@ export function Header() {
       }`}
     >
       <div className="max-w-6xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
-        {/* Logo */}
+        {/* Logo + subtitle */}
         <button
           onClick={() => scrollToSection('#hero')}
-          className="focus:outline-none transition-all duration-300"
+          className="focus:outline-none transition-all duration-300 flex flex-col items-start"
           aria-label="Voltar ao início"
         >
           <img
             src="/logo-mark.svg"
             alt="Helora"
             className={
-              'h-7 sm:h-8 w-auto transition-all duration-300 ' +
+              'h-6 sm:h-7 w-auto transition-all duration-300 ' +
               (isTransparent ? 'brightness-0 invert' : 'brightness-0')
             }
           />
+          <span
+            className={
+              'font-sans text-[9px] sm:text-[10px] tracking-[0.15em] uppercase leading-none -mt-0.5 transition-colors duration-300 ' +
+              (isTransparent ? 'text-white/60' : 'text-helora-tan/70')
+            }
+          >
+            saúde integrada
+          </span>
         </button>
 
         {/* Desktop nav */}

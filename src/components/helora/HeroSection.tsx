@@ -10,7 +10,7 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative min-h-[100dvh] flex items-start justify-center pt-28 sm:pt-36 md:pt-44 overflow-hidden"
+      className="relative min-h-[100dvh] flex items-start justify-center pt-20 sm:pt-24 md:pt-28 overflow-hidden"
     >
       {/* Immersive organic nature background — brand identity cover inspired */}
       <OrganicNatureBg variant="hero" />
