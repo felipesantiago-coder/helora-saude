@@ -186,3 +186,32 @@ Stage Summary:
 - Projeto 100% otimizado para Vercel (headers, cache, build, Prisma, env)
 - Não foi possível fazer push: necessário configurar remote e credenciais GitHub manualmente
 - Comandos fornecidos ao usuário para completar o push
+---
+Task ID: visual-overhaul
+Agent: main
+Task: Major visual design overhaul — welcoming, intuitive, visually pleasing Helora website
+
+Work Log:
+- globals.css: Added `.scroll-reveal` utility (opacity-0, translateY(32px)), `.section-wave-top/bottom` SVG positioning classes, `.btn-ghost` transparent outline button class, `.organic-blob` decorative blob class. Increased `.helora-card` padding from implicit 16px to 24px, softened shadow from `0 4px 16px rgba(0.06)` to `0 2px 12px rgba(0.04)`, slowed transition from 200ms to 300ms. Added reduced-motion support for scroll-reveal.
+- Created ScrollReveal.tsx: Framer Motion wrapper using `useInView` (once, -60px margin), gentle ease `[0.25, 0.1, 0.25, 1]`, 0.7s duration, configurable delay prop.
+- HeroSection.tsx: Increased padding to py-28/py-40. Replaced single radial gradient with 3 layered organic blobs (sage primary, sienna secondary offset, sage tertiary top-left) using CSS blur(60-80px). Added secondary ghost CTA "Conheça a equipe" with smooth scroll to #equipe. Added trust line "✦ Acolhimento seguro e sem pressa". Slowed decorative O animation from 3s to 5s, reduced to opacity-50. Increased heading to text-5xl/md:text-7xl. Added staggered motion entrance animations on all elements.
+- ConceptSection.tsx: Wrapped in ScrollReveal. Increased padding to py-24/py-32. Added large faded "O" background decoration (200-320px, opacity-5, absolute positioned top-right). Changed left accent to rounded-l-full for organic feel. Increased paragraph font to text-base/md:text-[17px] and line-height to 1.85. Increased paragraph spacing to space-y-6.
+- ServicesSection.tsx: Wrapped heading and cards in ScrollReveal. Increased card padding to p-8 (via helora-card base). Added staggered card animations (delay: index * 0.1). Increased service name to text-xl/md:text-[22px] and description to text-[15px]. Added active:scale-[0.98] microinteraction on service cards. Increased section padding to py-24/py-32 and grid gap to gap-8.
+- TeamSection.tsx: Wrapped in ScrollReveal with staggered delays. Increased card padding to p-8. Added warm sage glow on hover (box-shadow rgba(119,127,92,0.12)). Increased bio text to text-[15px]. Increased grid gap to gap-8. Increased section padding to py-24/py-32.
+- TestimonialsSection.tsx (NEW): Created with 3 hardcoded testimonial cards (Mariana S., Carlos R., Fernanda L.). Each card has large serif quote mark in sage/30, italic serif quote text, name/role attribution with border-t separator. Cards use helora-card with subtle gradient background (white to antique-white/30). Section bg-helora-white with py-24/py-32. ScrollReveal animation with stagger.
+- CTASection.tsx (NEW): Warm CTA section with gradient from antique-white to gainsboro. Large serif heading "Pronto para cuidar de você?". Subtext about first step. Primary CTA button with active:scale microinteraction. Decorative organic "O" at 6% opacity. ScrollReveal animated.
+- OrganicDivider.tsx: Redesigned with variant prop. Default "sage" variant uses SVG curved wave path (80px tall, cubic bezier curves, sage fill at 6% opacity). Original "O" divider preserved as variant="o". Full-width, preserveAspectRatio="none".
+- Footer.tsx: Added organic wave SVG top decoration (cubic bezier, dark-green fill, positioned above footer). Added warm tagline "Cuidar é a nossa essência." in serif font. Increased padding to pt-12/pb-8 md:pt-16/md:pb-12. Made "Acesso profissional" more prominent with font-semibold and underline decoration. Updated bottom border to sage/20 for subtlety.
+- page.tsx: Updated section order: Hero → OrganicDivider(sage) → Concept → Services → OrganicDivider(sage) → Team → Testimonials → CTASection → Footer. Imported TestimonialsSection and CTASection.
+
+Stage Summary:
+- 10 files modified/created: globals.css, ScrollReveal.tsx (new), HeroSection.tsx, ConceptSection.tsx, ServicesSection.tsx, TeamSection.tsx, TestimonialsSection.tsx (new), CTASection.tsx (new), OrganicDivider.tsx, Footer.tsx, page.tsx
+- Zero lint errors (0 errors, 1 pre-existing font warning)
+- All brand colors and design tokens preserved
+- New sections: TestimonialsSection (social proof), CTASection (pre-footer conversion)
+- Scroll-reveal animations on all content sections (subtle, 0.7s, gentle ease)
+- Generous spacing: py-24/py-32 sections, p-8 cards, gap-8 grids
+- Organic SVG wave dividers replacing hard color breaks
+- Microinteractions: active:scale-[0.98] on buttons, warm glow hover on cards
+- 3 layered organic blobs in hero for depth
+- Ghost CTA button and trust element in hero
