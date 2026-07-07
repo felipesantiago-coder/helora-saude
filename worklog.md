@@ -215,3 +215,23 @@ Stage Summary:
 - Microinteractions: active:scale-[0.98] on buttons, warm glow hover on cards
 - 3 layered organic blobs in hero for depth
 - Ghost CTA button and trust element in hero
+
+---
+Task ID: admin-link-removal
+Agent: main
+Task: Remove admin/partner access link from public footer, move to hidden URL
+
+Work Log:
+- Removed "Para profissionais" / "Acesso profissional" section from Footer.tsx
+- Removed unused useAppStore import from Footer
+- Changed footer grid from 3-column to 2-column layout
+- Updated page.tsx to detect ?admin=login query parameter via useSearchParams
+- Added Suspense wrapper for AdminRouteDetector component (Next.js requirement)
+- Verified footer no longer shows admin link via agent-browser
+- Verified ?admin=login URL correctly shows admin login page
+- Committed and pushed to GitHub
+
+Stage Summary:
+- Admin access is now hidden: professionals navigate directly to /?admin=login
+- Public footer only shows site navigation links (Início, Conceito, Serviços, Equipe)
+- No admin links visible to patients or regular users
