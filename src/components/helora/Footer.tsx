@@ -21,7 +21,9 @@ export function Footer() {
   const setView = useAppStore((s) => s.setView);
 
   return (
-    <footer className="bg-helora-dark-green text-white mt-auto">
+    <footer className="bg-gradient-to-br from-[#283106] to-[#1a2004] text-white mt-auto">
+      {/* Top border accent */}
+      <div className="h-[3px] bg-helora-sage" aria-hidden="true" />
       <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
           {/* Logo & tagline */}
@@ -54,7 +56,7 @@ export function Footer() {
             </span>
             <button
               onClick={() => setView('admin-login')}
-              className="font-sans text-sm text-white/80 hover:text-white transition-colors duration-200 text-left focus:outline-none focus-visible:underline w-fit"
+              className="font-sans text-sm text-helora-sienna hover:text-helora-sienna/80 transition-colors duration-200 text-left focus:outline-none focus-visible:underline w-fit font-medium"
             >
               Acesso profissional
             </button>

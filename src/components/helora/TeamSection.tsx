@@ -54,7 +54,7 @@ export function TeamSection() {
     <section id="equipe" className="bg-helora-white py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-4">
         <div className="max-w-2xl mb-12">
-          <h2 className="font-serif font-normal text-2xl md:text-4xl text-helora-dark-coffee tracking-tight text-balance mb-4">
+          <h2 className="font-serif font-normal text-2xl md:text-4xl text-helora-dark-green tracking-tight text-balance mb-4">
             Quem te acompanha
           </h2>
           <p className="font-sans text-helora-tan text-base md:text-lg leading-relaxed">
@@ -100,10 +100,10 @@ export function TeamSection() {
         {!loading && !error && professionals.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl">
             {professionals.map((person) => (
-              <div key={person.id} className="helora-card p-6 flex flex-col">
+              <div key={person.id} className="helora-card p-6 flex flex-col border-l-[3px] border-l-helora-sage">
                 {/* Avatar with initials */}
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-full bg-helora-gainsboro flex items-center justify-center shrink-0">
+                  <div className="w-14 h-14 rounded-full bg-helora-sage/20 flex items-center justify-center shrink-0">
                     <span className="font-serif text-lg text-helora-sage font-normal">
                       {getInitials(person.name)}
                     </span>
@@ -113,7 +113,7 @@ export function TeamSection() {
                       {person.name}
                     </h3>
                     {person.specialty && (
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="inline-flex items-center gap-1.5 mt-0.5 bg-helora-sienna/10 rounded-full px-2.5 py-0.5">
                         <Heart
                           size={14}
                           className="text-helora-sienna"

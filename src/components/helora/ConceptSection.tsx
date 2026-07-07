@@ -2,11 +2,11 @@ export function ConceptSection() {
   return (
     <section id="conceito" className="bg-helora-white py-20 md:py-28">
       <div className="max-w-2xl mx-auto px-4">
-        <h2 className="font-serif font-normal text-2xl md:text-4xl text-helora-dark-coffee tracking-tight text-balance mb-8">
+        <h2 className="font-serif font-normal text-2xl md:text-4xl text-helora-dark-green tracking-tight text-balance mb-8">
           O que é a Helora
         </h2>
 
-        <div className="space-y-5 text-helora-dark-coffee leading-relaxed font-sans relative">
+        <div className="space-y-5 text-helora-dark-coffee leading-relaxed font-sans relative border-l-[3px] border-l-helora-sienna pl-6">
           <p>
             A Helora nasceu da crença de que cuidado verdadeiro começa com presença. Não somos apenas um
             consultório — somos um espaço onde você pode ser exatamente quem é, no seu tempo.
@@ -22,7 +22,7 @@ export function ConceptSection() {
           </p>
 
           {/* Subtle decorative organic "O" */}
-          <span className="absolute -top-6 -right-4 md:-right-8 organic-o opacity-30 pointer-events-none select-none" aria-hidden="true">
+          <span className="absolute -top-6 -right-4 md:-right-8 organic-o opacity-30 text-helora-sienna pointer-events-none select-none" aria-hidden="true">
             O
           </span>
         </div>

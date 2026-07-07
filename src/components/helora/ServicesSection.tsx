@@ -63,7 +63,7 @@ export function ServicesSection() {
     <section id="servicos" className="bg-helora-antique-white py-20 md:py-28">
       <div className="max-w-6xl mx-auto px-4">
         <div className="max-w-2xl mb-12">
-          <h2 className="font-serif font-normal text-2xl md:text-4xl text-helora-dark-coffee tracking-tight text-balance mb-4">
+          <h2 className="font-serif font-normal text-2xl md:text-4xl text-helora-dark-green tracking-tight text-balance mb-4">
             Como podemos te acompanhar
           </h2>
           <p className="font-sans text-helora-tan text-base md:text-lg leading-relaxed">
@@ -107,10 +107,10 @@ export function ServicesSection() {
               <button
                 key={service.id}
                 onClick={() => handleServiceClick(service)}
-                className="helora-card p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 cursor-pointer group"
+                className="helora-card p-6 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 cursor-pointer group border-t-[3px] border-t-helora-sage"
               >
                 <div className="flex items-start justify-between gap-3 mb-3">
-                  <h3 className="font-serif font-normal text-xl text-helora-dark-coffee tracking-tight">
+                  <h3 className="font-serif font-normal text-xl text-helora-dark-green tracking-tight">
                     {service.name}
                   </h3>
                   <Calendar
@@ -122,9 +122,12 @@ export function ServicesSection() {
                 <p className="font-sans text-sm text-helora-tan leading-relaxed mb-4">
                   {service.description}
                 </p>
-                <span className="font-sans font-semibold text-lg text-helora-sienna">
-                  {formatPrice(service.price)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-helora-sienna shrink-0" aria-hidden="true" />
+                  <span className="font-sans font-semibold text-lg text-helora-sienna">
+                    {formatPrice(service.price)}
+                  </span>
+                </div>
               </button>
             ))}
           </div>

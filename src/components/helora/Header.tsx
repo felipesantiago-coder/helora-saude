@@ -37,7 +37,7 @@ export function Header() {
   }, [setView]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-helora-white shadow-warm">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-helora-white shadow-warm border-b-[3px] border-b-helora-sage">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <button
@@ -45,7 +45,7 @@ export function Header() {
           className="font-serif text-2xl text-helora-dark-coffee tracking-tight focus:outline-none"
           aria-label="Voltar ao início"
         >
-          Hel<span className="text-helora-sage">o</span>ra
+          Hel<span className="text-helora-sienna">o</span>ra
         </button>
 
         {/* Desktop nav */}
@@ -54,7 +54,7 @@ export function Header() {
             <button
               key={link.href}
               onClick={() => handleNavClick(link.href)}
-              className="font-sans text-sm font-medium text-helora-tan hover:text-helora-dark-coffee transition-colors duration-200 focus:outline-none focus-visible:underline"
+              className="font-sans text-sm font-medium text-helora-tan hover:text-helora-dark-coffee transition-colors duration-200 focus:outline-none focus-visible:underline hover:font-semibold"
             >
               {link.label}
             </button>
