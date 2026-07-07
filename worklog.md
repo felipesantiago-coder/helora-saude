@@ -235,3 +235,34 @@ Stage Summary:
 - Admin access is now hidden: professionals navigate directly to /?admin=login
 - Public footer only shows site navigation links (Início, Conceito, Serviços, Equipe)
 - No admin links visible to patients or regular users
+
+---
+Task ID: production-integrations
+Agent: main + 3 subagents
+Task: Integrate 6 production services (Turso, R2, Ably, Brevo, Asaas, Sentry)
+
+Work Log:
+- Installed packages: @libsql/client, @prisma/adapter-libsql, @aws-sdk/client-s3, @aws-sdk/s3-request-presigner, ably, nodemailer, @sentry/nextjs
+- Updated src/lib/db.ts: Turso libsql adapter with fallback to local SQLite, exports both sync `db` and async `getDb()`
+- Created src/lib/r2.ts: Cloudflare R2 with presigned PUT URLs, delete, public URL
+- Created src/lib/ably-server.ts: Ably server singleton with publishEvent()
+- Created src/hooks/use-ably.ts: React hook for client-side Ably channel subscription
+- Created src/lib/brevo.ts: Nodemailer + Brevo SMTP with branded HTML email templates (confirmation, reminder)
+- Created src/lib/asaas.ts: Full Asaas v3 REST API client (createCustomer, createPayment, getPixQrCode, verifyWebhook)
+- Created src/app/api/upload/route.ts: Presigned URL generation for R2 uploads
+- Created src/app/api/email/route.ts: Send emails (template or generic HTML)
+- Created src/app/api/payment/create/route.ts: Create Asaas payments, update appointment, publish realtime event
+- Created src/app/api/payment/webhook/route.ts: Asaas webhook receiver, auto-confirm appointments on payment
+- Created src/app/api/ably-token/route.ts: Ably auth token generation for clients
+- Created sentry.client.config.ts and sentry.server.config.ts
+- Updated next.config.ts: wrapped with withSentryConfig
+- Updated prisma/schema.prisma: added paymentId, paymentStatus, paymentType, invoiceUrl, pixQrCode, pixPayload to Appointment
+- Updated .env.example with all 19 new env vars documented
+- Fixed API route mismatches (import names, function signatures)
+- Pushed schema to DB, verified site renders, lint clean
+
+Stage Summary:
+- 18 files changed, 1667 lines added
+- All integrations are graceful: app works without any service configured
+- Each service is independent and can be activated via env vars
+- Commit c48ded1 pushed to GitHub
