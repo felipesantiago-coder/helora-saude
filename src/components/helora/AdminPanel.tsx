@@ -177,9 +177,11 @@ export default function AdminPanel() {
       {/* Top bar */}
       <header className="sticky top-0 z-30 bg-helora-white border-b border-helora-light-gray shadow-warm px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <span className="font-serif text-helora-dark-coffee text-lg tracking-[-0.02em]">
-            Helora
-          </span>
+          <img
+            src="/logo.svg"
+            alt="Helora"
+            className="h-6 w-auto brightness-0"
+          />
           <div className="flex items-center gap-4">
             <span className="text-helora-tan font-sans text-sm hidden sm:inline">
               {user?.name}

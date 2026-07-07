@@ -1099,10 +1099,14 @@ export default function BookingWizard() {
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => setView('public')}
-            className="font-serif text-xl text-helora-dark-coffee tracking-tight focus:outline-none"
+            className="focus:outline-none"
             aria-label="Voltar ao início"
           >
-            Hel<span className="text-helora-sage">o</span>ra
+            <img
+              src="/logo.svg"
+              alt="Helora"
+              className="h-6 w-auto brightness-0"
+            />
           </button>
           <button
             onClick={() => setView('public')}

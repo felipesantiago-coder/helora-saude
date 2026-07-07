@@ -55,17 +55,14 @@ export function Footer() {
         {/* Subtle organic background glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-helora-sage/5 rounded-full blur-[100px] pointer-events-none" aria-hidden="true" />
 
-        {/* Warm tagline */}
-        <p className="font-serif text-helora-gainsboro text-lg md:text-xl mb-10 text-center md:text-left relative z-10">
-          Cuidar é a nossa essência.
-        </p>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 relative z-10">
-          {/* Logo & tagline */}
+          {/* Logo & description */}
           <div>
-            <span className="font-serif font-normal text-xl tracking-tight">
-              Hel<span className="text-helora-sage">o</span>ra
-            </span>
+            <img
+              src="/logo.svg"
+              alt="Helora"
+              className="h-10 sm:h-12 w-auto brightness-0 invert"
+            />
             <p className="font-sans text-helora-gainsboro/80 text-sm mt-3 leading-relaxed">
               Saúde integrada com acolhimento e serenidade. Cuidar de você é nossa essência.
             </p>

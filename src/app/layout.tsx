@@ -8,7 +8,9 @@ export const metadata: Metadata = {
     "Cuidar de você é nossa essência. Saúde integrada com acolhimento e presença.",
   keywords: ["saúde integrada", "psicologia", "cuidado", "Helora", "bem-estar"],
   icons: {
-    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
   },
   openGraph: {
     title: "Helora | saúde integrada",

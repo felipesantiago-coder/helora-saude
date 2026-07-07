@@ -72,12 +72,18 @@ export function Header() {
           {/* Logo */}
           <button
             onClick={() => scrollToSection('#hero')}
-            className={`font-serif text-xl sm:text-2xl tracking-tight focus:outline-none transition-colors duration-300 ${
-              isTransparent ? 'text-white' : 'text-helora-dark-coffee'
-            }`}
+            className="focus:outline-none transition-all duration-300"
             aria-label="Voltar ao início"
           >
-            Hel<span className="text-helora-sage">o</span>ra
+            <img
+              src="/logo.svg"
+              alt="Helora"
+              className={`h-6 sm:h-7 w-auto transition-all duration-300 ${
+                isTransparent
+                  ? 'brightness-0 invert'
+                  : 'brightness-0'
+              }`}
+            />
           </button>
 
           {/* Desktop nav */}
