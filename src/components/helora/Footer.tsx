@@ -59,12 +59,15 @@ export function Footer() {
           {/* Logo & description */}
           <div>
             <img
-              src="/logo.svg"
+              src="/logo-mark.svg"
               alt="Helora"
-              className="h-10 sm:h-12 w-auto brightness-0 invert"
+              className="h-8 sm:h-10 w-auto brightness-0 invert"
             />
-            <p className="font-sans text-helora-gainsboro/80 text-sm mt-3 leading-relaxed">
-              Saúde integrada com acolhimento e serenidade. Cuidar de você é nossa essência.
+            <p className="font-sans text-helora-gainsboro/80 text-sm mt-1 tracking-wider uppercase">
+              saúde integrada
+            </p>
+            <p className="font-sans text-helora-gainsboro/70 text-sm mt-3 leading-relaxed">
+              Cuidar de você é nossa essência.
             </p>
           </div>
 
