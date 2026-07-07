@@ -5,10 +5,10 @@ import { FloatingLeaf, OrganicBranch } from './OrganicNatureBg';
 
 export function ConceptSection() {
   return (
-    <section id="conceito" className="bg-helora-white py-24 md:py-32 relative overflow-hidden nature-grain">
+    <section id="conceito" className="bg-helora-white py-24 md:py-32 relative overflow-hidden">
       {/* Organic nature background accents */}
-      <div className="absolute top-0 right-0 pointer-events-none opacity-[0.03]" aria-hidden="true">
-        <svg width="400" height="500" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div className="absolute top-0 right-0 pointer-events-none opacity-[0.03] max-w-[50%]" aria-hidden="true">
+        <svg className="w-full h-auto" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M200 20 Q350 80, 340 200 Q330 340, 180 380 Q30 410, 20 260 Q10 100, 200 20Z" fill="#777F5C" />
           <path d="M200 20 Q350 80, 340 200 Q330 340, 180 380 Q30 410, 20 260 Q10 100, 200 20Z" fill="none" stroke="#777F5C" strokeWidth="1" />
           <path d="M195 40 Q210 180, 175 350" stroke="#777F5C" strokeWidth="0.5" fill="none" opacity="0.5" />
@@ -41,14 +41,14 @@ export function ConceptSection() {
 
             <p className="text-base md:text-[17px] pl-8">
               A Helora nasceu da crença de que cuidado verdadeiro começa com presença. Não somos apenas um
-              consultório — somos um espaço onde você pode ser exatamente quem é, no seu tempo.
+              consultório. Somos um espaço onde você pode ser exatamente quem é, no seu tempo.
             </p>
             <p className="text-base md:text-[17px] pl-8">
               Aqui, saúde integrada significa olhar para você por completo: corpo, mente e emoção. Sem
               rótulos, sem pressa. Apenas cuidado que faz sentido.
             </p>
             <p className="text-base md:text-[17px] pl-8">
-              Acreditamos na saúde integrada como filosofia de vida — cada aspecto de quem você é merece
+              Acreditamos na saúde integrada como filosofia de vida: cada aspecto de quem você é merece
               atenção e respeito. Na Helora, você encontra um espaço acolhedor para cuidar de si com
               serenidade e confiança, no seu próprio ritmo.
             </p>

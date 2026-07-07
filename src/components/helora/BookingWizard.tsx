@@ -526,7 +526,7 @@ function StepData() {
               <option value="">Selecione um profissional</option>
               {professionals.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name}{p.specialty ? ` — ${p.specialty}` : ''}
+                  {p.name}{p.specialty ? ` · ${p.specialty}` : ''}
                 </option>
               ))}
             </select>
@@ -1039,7 +1039,7 @@ function StepConfirm() {
 
           <div>
             <p className="helora-label text-helora-tan">Telefone</p>
-            <p className="text-helora-dark-coffee font-medium">{patientPhone || '—'}</p>
+            <p className="text-helora-dark-coffee font-medium">{patientPhone || 'Não informado'}</p>
           </div>
         </div>
       </div>

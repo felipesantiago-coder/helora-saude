@@ -62,7 +62,7 @@ export function ServicesSection() {
   }
 
   return (
-    <section id="servicos" className="bg-helora-antique-white py-24 md:py-32 relative overflow-hidden nature-grain">
+    <section id="servicos" className="bg-helora-antique-white py-24 md:py-32 relative overflow-hidden">
       {/* Organic background accents */}
       <FloatingLeaf className="absolute top-20 right-6 md:right-16" size="lg" color="sage" />
       <FloatingLeaf className="absolute bottom-24 left-4 md:left-12" size="md" color="dark" />

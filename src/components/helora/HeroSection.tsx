@@ -10,13 +10,13 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden"
+      className="relative min-h-[100dvh] flex items-center justify-center pt-14 sm:pt-16 overflow-hidden"
     >
       {/* Immersive organic nature background — brand identity cover inspired */}
       <OrganicNatureBg variant="hero" />
 
       {/* Content */}
-      <div className="relative z-10 max-w-3xl mx-auto px-4 text-center py-28 md:py-40">
+      <div className="relative z-10 max-w-3xl mx-auto px-5 sm:px-4 text-center py-20 sm:py-28 md:py-40">
         {/* Tag */}
         <motion.span
           className="inline-block font-sans font-medium text-helora-gainsboro/90 uppercase tracking-[0.25em] text-xs md:text-sm mb-8"
@@ -29,7 +29,7 @@ export function HeroSection() {
 
         {/* Heading */}
         <motion.h1
-          className="font-serif font-light text-4xl md:text-6xl lg:text-7xl text-white tracking-tight text-balance mb-6"
+          className="font-serif font-light text-[2rem] sm:text-4xl md:text-6xl lg:text-7xl text-white tracking-tight text-balance mb-4 sm:mb-6 leading-[1.15]"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.25 }}
@@ -67,12 +67,12 @@ export function HeroSection() {
 
         {/* Subtext */}
         <motion.p
-          className="font-sans text-helora-gainsboro/70 text-base md:text-lg max-w-xl mx-auto mb-12 leading-relaxed"
+          className="font-sans text-helora-gainsboro/70 text-sm sm:text-base md:text-lg max-w-xl mx-auto mb-8 sm:mb-12 leading-relaxed"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.4 }}
         >
-          Um espaço de acolhimento onde você pode respirar, ser ouvido e cuidar de si — sem pressa, sem julgamento.
+          Um espaço de acolhimento onde você pode respirar, ser ouvido e cuidar de si. Sem pressa, sem julgamento.
         </motion.p>
 
         {/* CTA buttons */}
@@ -84,7 +84,7 @@ export function HeroSection() {
         >
           <button
             onClick={() => setView('booking')}
-            className="btn-pill bg-helora-sage text-white font-medium py-3.5 px-9 hover:bg-helora-gainsboro/30 hover:text-white border border-helora-sage/40 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 text-base active:scale-[0.98]"
+            className="btn-pill bg-helora-sage text-white font-medium py-3 px-7 sm:py-3.5 sm:px-9 hover:bg-helora-gainsboro/30 hover:text-white border border-helora-sage/40 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 text-sm sm:text-base active:scale-[0.98] w-full sm:w-auto"
           >
             Agendar sua primeira sessão
           </button>
@@ -92,7 +92,7 @@ export function HeroSection() {
             onClick={() => {
               document.getElementById('equipe')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="font-sans font-medium text-sm text-helora-gainsboro/70 hover:text-white border border-helora-gainsboro/20 hover:border-helora-gainsboro/40 rounded-full px-6 py-3 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50"
+            className="font-sans font-medium text-sm text-helora-gainsboro/70 hover:text-white border border-helora-gainsboro/20 hover:border-helora-gainsboro/40 rounded-full px-6 py-2.5 sm:py-3 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50"
           >
             Conheça a equipe
           </button>

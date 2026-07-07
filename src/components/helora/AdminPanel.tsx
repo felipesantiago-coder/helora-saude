@@ -289,10 +289,10 @@ export default function AdminPanel() {
                   </p>
                 </div>
               ) : (
-                <div className="helora-card overflow-hidden" style={{ overflow: 'visible' }}>
-                  <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                    <table className="w-full text-left font-sans text-sm">
-                      <thead className="sticky top-0 bg-helora-gainsboro">
+                <div className="helora-card overflow-hidden p-0">
+                  <div className="overflow-x-auto max-h-[500px] overflow-y-auto -mx-0">
+                    <table className="w-full text-left font-sans text-sm min-w-[500px]">
+                      <thead className="sticky top-0 bg-helora-gainsboro z-10">
                         <tr>
                           <th className="px-4 py-3 text-helora-dark-coffee font-medium text-xs uppercase tracking-wider">
                             Data
@@ -374,7 +374,7 @@ export default function AdminPanel() {
                                   </button>
                                 )}
                                 {(appt.status === 'cancelled') && (
-                                  <span className="text-helora-tan font-sans text-xs">—</span>
+                                  <span className="text-helora-tan font-sans text-xs">N/A</span>
                                 )}
                               </div>
                             </td>
@@ -408,9 +408,9 @@ export default function AdminPanel() {
                   </p>
                 </div>
               ) : (
-                <div className="helora-card overflow-hidden">
-                  <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                    <table className="w-full text-left font-sans text-sm">
+                <div className="helora-card overflow-hidden p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left font-sans text-sm min-w-[440px]">
                       <thead className="sticky top-0 bg-helora-gainsboro">
                         <tr>
                           <th className="px-4 py-3 text-helora-dark-coffee font-medium text-xs uppercase tracking-wider">
@@ -436,12 +436,12 @@ export default function AdminPanel() {
                                   {prof.name}
                                 </span>
                                 <span className="text-helora-tan text-xs flex items-center gap-1 sm:hidden">
-                                  {prof.specialty || '—'}
+                                  {prof.specialty || 'N/A'}
                                 </span>
                               </div>
                             </td>
                             <td className="px-4 py-3 text-helora-dark-coffee whitespace-nowrap hidden sm:table-cell">
-                              {prof.specialty || '—'}
+                              {prof.specialty || 'N/A'}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">
                               <StatusBadge status={prof.status} />
@@ -469,7 +469,7 @@ export default function AdminPanel() {
                                   </button>
                                 </div>
                               ) : (
-                                <span className="text-helora-tan font-sans text-xs">—</span>
+                                <span className="text-helora-tan font-sans text-xs">N/A</span>
                               )}
                             </td>
                           </tr>
