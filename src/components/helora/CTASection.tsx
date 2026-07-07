@@ -8,7 +8,7 @@ export function CTASection() {
   const setView = useAppStore((s) => s.setView);
 
   return (
-    <section className="relative overflow-hidden py-28 md:py-36">
+    <section className="relative overflow-hidden py-16 md:py-28">
       {/* Organic nature background — light variant */}
       <OrganicNatureBg variant="light" />
 

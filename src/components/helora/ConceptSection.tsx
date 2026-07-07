@@ -5,7 +5,7 @@ import { FloatingLeaf, OrganicBranch } from './OrganicNatureBg';
 
 export function ConceptSection() {
   return (
-    <section id="conceito" className="bg-helora-white py-24 md:py-32 relative overflow-hidden">
+    <section id="conceito" className="bg-helora-white py-12 md:py-24 relative overflow-hidden">
       {/* Organic nature background accents */}
       <div className="absolute top-0 right-0 pointer-events-none opacity-[0.03] max-w-[50%]" aria-hidden="true">
         <svg className="w-full h-auto" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">

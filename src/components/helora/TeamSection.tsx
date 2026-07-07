@@ -53,7 +53,7 @@ export function TeamSection() {
   }, []);
 
   return (
-    <section id="equipe" className="bg-helora-white py-24 md:py-32 relative overflow-hidden">
+    <section id="equipe" className="bg-helora-white py-12 md:py-24 relative overflow-hidden">
       {/* Organic nature decorations */}
       <FloatingLeaf className="absolute top-16 left-4 md:left-10" size="md" color="sage" />
       <FloatingLeaf className="absolute bottom-20 right-6 md:right-14" size="lg" color="dark" />

@@ -26,7 +26,7 @@ const TESTIMONIALS = [
 
 export function TestimonialsSection() {
   return (
-    <section className="bg-helora-antique-white/50 py-24 md:py-32 relative overflow-hidden">
+    <section className="bg-helora-antique-white/50 py-12 md:py-24 relative overflow-hidden">
       {/* Organic background elements */}
       <FloatingLeaf className="absolute top-8 right-6 md:right-20" size="sm" color="sage" />
       <FloatingLeaf className="absolute bottom-12 left-8 md:left-16" size="md" color="sienna" />
