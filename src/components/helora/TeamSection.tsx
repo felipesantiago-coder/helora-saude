@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollReveal } from './ScrollReveal';
+import { FloatingLeaf, OrganicBranch } from './OrganicNatureBg';
 
 interface Professional {
   id: string;
@@ -52,8 +53,13 @@ export function TeamSection() {
   }, []);
 
   return (
-    <section id="equipe" className="bg-helora-white py-24 md:py-32">
-      <div className="max-w-6xl mx-auto px-4">
+    <section id="equipe" className="bg-helora-white py-24 md:py-32 relative overflow-hidden nature-grain">
+      {/* Organic nature decorations */}
+      <FloatingLeaf className="absolute top-16 left-4 md:left-10" size="md" color="sage" />
+      <FloatingLeaf className="absolute bottom-20 right-6 md:right-14" size="lg" color="dark" />
+      <OrganicBranch className="absolute top-8 right-4 md:right-10 opacity-30" />
+
+      <div className="max-w-6xl mx-auto px-4 relative z-10">
         <ScrollReveal>
           <div className="max-w-2xl mb-14">
             <h2 className="font-serif font-normal text-2xl md:text-4xl text-helora-dark-green tracking-tight text-balance mb-4">
@@ -104,10 +110,17 @@ export function TeamSection() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl">
             {professionals.map((person, index) => (
               <ScrollReveal key={person.id} delay={index * 0.12}>
-                <div className="helora-card flex flex-col border-l-[3px] border-l-helora-sage hover:shadow-[0_8px_32px_rgba(119,127,92,0.12)] transition-shadow duration-300">
-                  {/* Avatar with initials */}
+                <div className="helora-card flex flex-col hover:shadow-organic-lg transition-shadow duration-300 relative overflow-hidden">
+                  {/* Organic left accent — leaf-like SVG curve */}
+                  <div className="absolute left-0 top-0 bottom-0 w-[3px]" aria-hidden="true">
+                    <svg width="3" height="100%" viewBox="0 0 3 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1.5 0 Q0 50, 2.5 100 Q3 150, 1.5 200" stroke="#777F5C" strokeWidth="3" fill="none" strokeLinecap="round" />
+                    </svg>
+                  </div>
+
+                  {/* Avatar with organic shape */}
                   <div className="flex items-center gap-4 mb-5">
-                    <div className="w-14 h-14 rounded-full bg-helora-sage/20 flex items-center justify-center shrink-0">
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-helora-sage/20 to-helora-sage/10 flex items-center justify-center shrink-0 border border-helora-sage/10">
                       <span className="font-serif text-lg text-helora-sage font-normal">
                         {getInitials(person.name)}
                       </span>
@@ -117,7 +130,7 @@ export function TeamSection() {
                         {person.name}
                       </h3>
                       {person.specialty && (
-                        <div className="inline-flex items-center gap-1.5 mt-1 bg-helora-sienna/10 rounded-full px-2.5 py-0.5">
+                        <div className="inline-flex items-center gap-1.5 mt-1 bg-helora-sienna/8 rounded-full px-2.5 py-0.5 border border-helora-sienna/10">
                           <Heart
                             size={14}
                             className="text-helora-sienna"
@@ -136,6 +149,13 @@ export function TeamSection() {
                       {person.bio}
                     </p>
                   )}
+
+                  {/* Subtle organic corner accent */}
+                  <div className="absolute bottom-0 right-0 pointer-events-none opacity-[0.04]" aria-hidden="true">
+                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M80 80 Q50 70, 40 40 Q35 20, 50 5 Q65 15, 70 40 Q75 60, 80 80Z" fill="#777F5C" />
+                    </svg>
+                  </div>
                 </div>
               </ScrollReveal>
             ))}

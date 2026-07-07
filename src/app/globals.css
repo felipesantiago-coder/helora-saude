@@ -103,6 +103,12 @@
   .shadow-warm-lg {
     box-shadow: 0 8px 32px rgba(44, 36, 28, 0.1);
   }
+  .shadow-organic {
+    box-shadow: 0 4px 24px rgba(40, 49, 6, 0.06), 0 1px 4px rgba(40, 49, 6, 0.03);
+  }
+  .shadow-organic-lg {
+    box-shadow: 0 12px 48px rgba(40, 49, 6, 0.08), 0 2px 8px rgba(40, 49, 6, 0.04);
+  }
   .focus-ring-sage:focus {
     outline: none;
     border-color: #777F5C;
@@ -151,61 +157,51 @@
     transform: translateY(32px);
   }
 
-  /* Section wave SVG positioning */
-  .section-wave-top {
-    position: relative;
-  }
-  .section-wave-top > svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: auto;
-    display: block;
-    line-height: 0;
-    margin-top: -1px;
-  }
-  .section-wave-bottom {
-    position: relative;
-  }
-  .section-wave-bottom > svg {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: auto;
-    display: block;
-    line-height: 0;
-    margin-bottom: -1px;
-  }
-
-  /* Ghost button style */
-  .btn-ghost {
-    background: transparent;
-    border: 1.5px solid #C7C3AC;
-    border-radius: 50px;
-    color: #2C241C;
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    padding: 12px 28px;
-    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
-    cursor: pointer;
-  }
-  .btn-ghost:hover {
-    background: rgba(119, 127, 92, 0.08);
-    border-color: #777F5C;
-    color: #283106;
-  }
-  .btn-ghost:active {
-    transform: scale(0.98);
-  }
-
   /* Organic blob decoration */
   .organic-blob {
     position: absolute;
     border-radius: 50%;
     filter: blur(60px);
     pointer-events: none;
+  }
+
+  /* Subtle grain/noise texture overlay */
+  .nature-grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.025;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
+
+  /* Organic shape clip paths for image containers */
+  .clip-organic-1 {
+    clip-path: path('M 20 10 Q 60 0, 80 15 T 90 50 Q 85 80, 50 90 Q 10 95, 5 60 Q 0 25, 20 10 Z');
+  }
+  .clip-organic-2 {
+    clip-path: ellipse(45% 48% at 50% 50%);
+  }
+
+  /* Gentle breathing animation for decorative elements */
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); opacity: 0.06; }
+    50% { transform: scale(1.08); opacity: 0.12; }
+  }
+  .animate-breathe {
+    animation: breathe 8s ease-in-out infinite;
+  }
+
+  /* Slow drift animation */
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(8px, -12px) rotate(2deg); }
+    66% { transform: translate(-5px, 6px) rotate(-1deg); }
+  }
+  .animate-drift {
+    animation: drift 20s ease-in-out infinite;
   }
 }
 
@@ -221,7 +217,7 @@
   }
   .helora-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 32px rgba(44, 36, 28, 0.1);
+    box-shadow: 0 8px 32px rgba(40, 49, 6, 0.1);
   }
   .helora-input {
     background: #FFFFFF;
@@ -263,6 +259,10 @@
   .scroll-reveal {
     opacity: 1;
     transform: none;
+  }
+  .animate-breathe,
+  .animate-drift {
+    animation: none;
   }
 }
 

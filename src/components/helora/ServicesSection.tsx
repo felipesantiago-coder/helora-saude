@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Calendar } from 'lucide-react';
+import { Leaf } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBookingStore, useAppStore } from '@/stores/helora-store';
 import { ScrollReveal } from './ScrollReveal';
+import { FloatingLeaf } from './OrganicNatureBg';
 
 interface Service {
   id: string;
@@ -61,8 +62,20 @@ export function ServicesSection() {
   }
 
   return (
-    <section id="servicos" className="bg-helora-antique-white py-24 md:py-32">
-      <div className="max-w-6xl mx-auto px-4">
+    <section id="servicos" className="bg-helora-antique-white py-24 md:py-32 relative overflow-hidden nature-grain">
+      {/* Organic background accents */}
+      <FloatingLeaf className="absolute top-20 right-6 md:right-16" size="lg" color="sage" />
+      <FloatingLeaf className="absolute bottom-24 left-4 md:left-12" size="md" color="dark" />
+
+      {/* Subtle organic shape background */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-breathe" aria-hidden="true">
+        <svg width="600" height="600" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-[0.03]">
+          <path d="M300 50 Q500 120, 480 300 Q460 480, 300 520 Q140 560, 100 350 Q60 140, 300 50Z" fill="#777F5C" />
+          <path d="M300 50 Q500 120, 480 300 Q460 480, 300 520 Q140 560, 100 350 Q60 140, 300 50Z" fill="none" stroke="#777F5C" strokeWidth="0.5" />
+        </svg>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 relative z-10">
         <ScrollReveal>
           <div className="max-w-2xl mb-14">
             <h2 className="font-serif font-normal text-2xl md:text-4xl text-helora-dark-green tracking-tight text-balance mb-4">
@@ -110,15 +123,22 @@ export function ServicesSection() {
               <ScrollReveal key={service.id} delay={index * 0.1}>
                 <button
                   onClick={() => handleServiceClick(service)}
-                  className="helora-card text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 cursor-pointer group border-t-[3px] border-t-helora-sage w-full active:scale-[0.98] transition-transform"
+                  className="helora-card text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 cursor-pointer group w-full active:scale-[0.98] transition-transform relative overflow-hidden"
                 >
+                  {/* Organic top accent — leaf-like curve instead of straight line */}
+                  <div className="absolute top-0 left-0 right-0 h-[3px] overflow-hidden" aria-hidden="true">
+                    <svg width="100%" height="3" viewBox="0 0 400 3" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M0 1.5 Q100 0, 200 2 Q300 3, 400 1" stroke="#777F5C" strokeWidth="3" fill="none" strokeLinecap="round" />
+                    </svg>
+                  </div>
+
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <h3 className="font-serif font-normal text-xl md:text-[22px] text-helora-dark-green tracking-tight">
                       {service.name}
                     </h3>
-                    <Calendar
+                    <Leaf
                       size={18}
-                      className="text-helora-light-gray mt-1 shrink-0 group-hover:text-helora-sage transition-colors duration-200"
+                      className="text-helora-light-gray mt-1 shrink-0 group-hover:text-helora-sage transition-colors duration-300"
                       aria-hidden="true"
                     />
                   </div>

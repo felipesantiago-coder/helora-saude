@@ -20,8 +20,8 @@ function PublicPage() {
       <Header />
       <main className="flex-1">
         <HeroSection />
-        <OrganicDivider variant="sage" />
         <ConceptSection />
+        <OrganicDivider variant="leaf" />
         <ServicesSection />
         <OrganicDivider variant="sage" />
         <TeamSection />

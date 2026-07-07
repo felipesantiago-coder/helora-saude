@@ -62,3 +62,6 @@ db/*.db-journal
 
 # Mini-services (local dev only)
 mini-services/
+
+# Upload files (brand assets, generated images)
+upload/

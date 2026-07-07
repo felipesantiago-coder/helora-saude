@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/helora-store';
+import { OrganicNatureBg } from './OrganicNatureBg';
 
 export function HeroSection() {
   const setView = useAppStore((s) => s.setView);
@@ -9,86 +10,67 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative bg-helora-antique-white min-h-screen flex items-center justify-center pt-16 overflow-hidden"
+      className="relative min-h-screen flex items-center justify-center pt-16 overflow-hidden"
     >
-      {/* Multiple layered organic blobs for depth */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        aria-hidden="true"
-      >
-        {/* Primary large sage blob */}
-        <div
-          className="organic-blob"
-          style={{
-            width: '70vw',
-            height: '70vw',
-            maxWidth: '900px',
-            maxHeight: '900px',
-            top: '15%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'radial-gradient(ellipse, rgba(119,127,92,0.13) 0%, rgba(119,127,92,0.04) 50%, transparent 70%)',
-            filter: 'blur(80px)',
-          }}
-        />
-        {/* Secondary warm sienna blob — offset */}
-        <div
-          className="organic-blob"
-          style={{
-            width: '50vw',
-            height: '50vw',
-            maxWidth: '600px',
-            maxHeight: '600px',
-            top: '55%',
-            right: '-10%',
-            background: 'radial-gradient(ellipse, rgba(156,97,70,0.07) 0%, transparent 70%)',
-            filter: 'blur(70px)',
-          }}
-        />
-        {/* Tertiary sage blob — top left accent */}
-        <div
-          className="organic-blob"
-          style={{
-            width: '40vw',
-            height: '40vw',
-            maxWidth: '500px',
-            maxHeight: '500px',
-            top: '5%',
-            left: '-5%',
-            background: 'radial-gradient(ellipse, rgba(119,127,92,0.08) 0%, transparent 70%)',
-            filter: 'blur(60px)',
-          }}
-        />
-      </div>
+      {/* Immersive organic nature background — brand identity cover inspired */}
+      <OrganicNatureBg variant="hero" />
 
+      {/* Content */}
       <div className="relative z-10 max-w-3xl mx-auto px-4 text-center py-28 md:py-40">
         {/* Tag */}
         <motion.span
-          className="inline-block font-sans font-medium text-helora-sage uppercase tracking-widest text-sm mb-8"
+          className="inline-block font-sans font-medium text-helora-gainsboro/90 uppercase tracking-[0.25em] text-xs md:text-sm mb-8"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.1 }}
         >
           saúde integrada
         </motion.span>
 
         {/* Heading */}
         <motion.h1
-          className="font-serif font-light text-5xl md:text-7xl text-helora-dark-coffee tracking-tight text-balance mb-6 relative inline-block"
+          className="font-serif font-light text-4xl md:text-6xl lg:text-7xl text-white tracking-tight text-balance mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1], delay: 0.2 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.25 }}
         >
-          Cuidar de você é nossa essência.
-          <span className="absolute -bottom-2 left-1/4 right-1/4 h-[3px] bg-helora-sienna rounded-full" aria-hidden="true" />
+          Cuidar de você é
+          <br />
+          <span className="text-helora-gainsboro/80">nossa essência.</span>
         </motion.h1>
+
+        {/* Organic underline */}
+        <motion.div
+          className="flex justify-center mb-8"
+          initial={{ opacity: 0, scaleX: 0 }}
+          animate={{ opacity: 1, scaleX: 1 }}
+          transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1], delay: 0.5 }}
+          aria-hidden="true"
+        >
+          <svg width="120" height="12" viewBox="0 0 120 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M2 8 Q30 2, 60 6 Q90 10, 118 4"
+              stroke="#9C6146"
+              strokeWidth="2"
+              strokeLinecap="round"
+              opacity="0.6"
+            />
+            <path
+              d="M10 10 Q40 4, 70 7 Q100 10, 110 6"
+              stroke="#777F5C"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              opacity="0.4"
+            />
+          </svg>
+        </motion.div>
 
         {/* Subtext */}
         <motion.p
-          className="font-sans text-helora-tan text-lg md:text-xl max-w-xl mx-auto mb-12 leading-relaxed"
+          className="font-sans text-helora-gainsboro/70 text-base md:text-lg max-w-xl mx-auto mb-12 leading-relaxed"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1], delay: 0.35 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.4 }}
         >
           Um espaço de acolhimento onde você pode respirar, ser ouvido e cuidar de si — sem pressa, sem julgamento.
         </motion.p>
@@ -98,11 +80,11 @@ export function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1], delay: 0.5 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.55 }}
         >
           <button
             onClick={() => setView('booking')}
-            className="btn-pill bg-helora-sage text-white font-medium py-3.5 px-9 hover:bg-helora-dark-green transition-[color,background-color,transform] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 text-base shadow-warm-lg active:scale-[0.98]"
+            className="btn-pill bg-helora-sage text-white font-medium py-3.5 px-9 hover:bg-helora-gainsboro/30 hover:text-white border border-helora-sage/40 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 text-base active:scale-[0.98]"
           >
             Agendar sua primeira sessão
           </button>
@@ -110,7 +92,7 @@ export function HeroSection() {
             onClick={() => {
               document.getElementById('equipe')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="btn-ghost text-base"
+            className="font-sans font-medium text-sm text-helora-gainsboro/70 hover:text-white border border-helora-gainsboro/20 hover:border-helora-gainsboro/40 rounded-full px-6 py-3 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50"
           >
             Conheça a equipe
           </button>
@@ -118,27 +100,27 @@ export function HeroSection() {
 
         {/* Trust line */}
         <motion.p
-          className="mt-8 font-sans text-sm text-helora-tan/80 tracking-wide"
+          className="mt-10 font-sans text-xs text-helora-gainsboro/40 tracking-[0.2em] uppercase"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.8 }}
         >
-          ✦ Acolhimento seguro e sem pressa
+          Acolhimento seguro e sem pressa
         </motion.p>
 
-        {/* Decorative animated O — slower, more subtle */}
+        {/* Decorative animated organic O — the brand's signature element */}
         <motion.div
-          className="mt-20 flex justify-center"
+          className="mt-16 flex justify-center"
           aria-hidden="true"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.2, delay: 0.9 }}
+          transition={{ duration: 1.5, delay: 1 }}
         >
           <motion.span
-            className="organic-o organic-o-large opacity-50"
-            animate={{ scale: [1, 1.06, 1] }}
+            className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full border border-helora-gainsboro/20 text-helora-gainsboro/30 font-serif text-2xl md:text-3xl"
+            animate={{ scale: [1, 1.06, 1], opacity: [0.3, 0.5, 0.3] }}
             transition={{
-              duration: 5,
+              duration: 6,
               repeat: Infinity,
               ease: 'easeInOut',
             }}
@@ -146,6 +128,27 @@ export function HeroSection() {
             O
           </motion.span>
         </motion.div>
+      </div>
+
+      {/* Bottom organic wave transition to next section */}
+      <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] z-10" aria-hidden="true">
+        <svg
+          viewBox="0 0 1440 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-auto block"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0 40 Q180 100, 360 70 Q540 40, 720 60 Q900 80, 1080 50 Q1260 20, 1440 45 L1440 120 L0 120 Z"
+            fill="#FFFFFF"
+          />
+          <path
+            d="M0 60 Q200 90, 400 75 Q600 60, 800 80 Q1000 100, 1200 70 Q1350 50, 1440 65 L1440 120 L0 120 Z"
+            fill="#FFFFFF"
+            opacity="0.5"
+          />
+        </svg>
       </div>
     </section>
   );
