@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  passwordHash  String?
+  role          String   @default("professional")
+  specialty     String?
+  status        String   @default("pending")
+  treatsAllAges Boolean  @default(false)
+  bio           String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  availability       Availability[]
+  professionalServices ProfessionalService[]
+  professionalAgeRanges ProfessionalAgeRange[]
+  appointments        Appointment[]
+}
+
+model AgeRange {
+  id      String @id @default(cuid())
+  name    String @unique
+  label   String
+  minAge  Int
+  maxAge  Int
+
+  professionalAgeRanges ProfessionalAgeRange[]
+}
+
+model ProfessionalAgeRange {
+  id          String   @id @default(cuid())
+  professionalId String
+  ageRangeId    String
+
+  professional Profile  @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  ageRange    AgeRange  @relation(fields: [ageRangeId], references: [id], onDelete: Cascade)
+
+  @@unique([professionalId, ageRangeId])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  price       Float
+  description String
+  duration    Int      @default(60)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  professionalServices ProfessionalService[]
+  appointments          Appointment[]
+}
+
+model ProfessionalService {
+  id             String @id @default(cuid())
+  professionalId String
+  serviceId      String
+
+  professional Profile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  service      Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([professionalId, serviceId])
+}
+
+model Availability {
+  id             String   @id @default(cuid())
+  professionalId String
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  professional Profile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+}
+
+model Appointment {
+  id               String   @id @default(cuid())
+  serviceId        String
+  serviceName      String
+  price            Float
+  patientName      String
+  patientEmail     String
+  patientPhone     String
+  patientCpf       String
+  patientBirthDate String
+  professionalId   String
+  professionalName String
+  appointmentDate  String
+  appointmentTime  String
+  status           String   @default("pending")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  service      Service  @relation(fields: [serviceId], references: [id])
+  professional Profile  @relation(fields: [professionalId], references: [id])
+}
