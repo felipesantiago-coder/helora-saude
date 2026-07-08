@@ -176,14 +176,43 @@
     clip-path: ellipse(45% 48% at 50% 50%);
   }
 
-  /* Gentle breathing animation for decorative elements */
-  @keyframes breathe {
-    0%, 100% { transform: scale(1); opacity: 0.06; }
-    50% { transform: scale(1.08); opacity: 0.12; }
+  /*
+   * Resonance breathing animations — based on parasympathetic activation research.
+   * ~0.1 Hz (10s cycle) maximizes heart rate variability and vagal tone.
+   * Scale: 3-4% (imperceptible consciously, processed peripherally).
+   * Opacity: ±2-4% swing. Staggered delays create organic asynchrony.
+   */
+  @keyframes breathe-deep {
+    0%, 100% { transform: scale(1); opacity: 0.22; }
+    50% { transform: scale(1.04); opacity: 0.26; }
   }
-  .animate-breathe {
-    animation: breathe 8s ease-in-out infinite;
+  @keyframes breathe-slow {
+    0%, 100% { transform: scale(1); opacity: 0.14; }
+    50% { transform: scale(1.035); opacity: 0.17; }
   }
+  @keyframes breathe-gentle {
+    0%, 100% { transform: scale(1); opacity: 0.09; }
+    50% { transform: scale(1.03); opacity: 0.11; }
+  }
+  @keyframes breathe-faint {
+    0%, 100% { transform: scale(1); opacity: 0.07; }
+    50% { transform: scale(1.025); opacity: 0.09; }
+  }
+  @keyframes breathe-whisper {
+    0%, 100% { transform: scale(1); opacity: 0.05; }
+    50% { transform: scale(1.02); opacity: 0.065; }
+  }
+  @keyframes breathe-glow {
+    0%, 100% { opacity: 0.08; }
+    50% { opacity: 0.14; }
+  }
+
+  .breathe-deep   { animation: breathe-deep   10s ease-in-out infinite; will-change: transform, opacity; }
+  .breathe-slow    { animation: breathe-slow    10s ease-in-out infinite 2s; will-change: transform, opacity; }
+  .breathe-gentle  { animation: breathe-gentle  10s ease-in-out infinite 4s; will-change: transform, opacity; }
+  .breathe-faint   { animation: breathe-faint   10s ease-in-out infinite 6s; will-change: transform, opacity; }
+  .breathe-whisper  { animation: breathe-whisper  10s ease-in-out infinite 8s; will-change: transform, opacity; }
+  .breathe-glow    { animation: breathe-glow    10s ease-in-out infinite 1s; will-change: opacity; }
 
   /* Slow drift animation */
   @keyframes drift {
@@ -252,6 +281,12 @@
     opacity: 1;
     transform: none;
   }
+  .breathe-deep,
+  .breathe-slow,
+  .breathe-gentle,
+  .breathe-faint,
+  .breathe-whisper,
+  .breathe-glow,
   .animate-breathe,
   .animate-drift {
     animation: none;

@@ -18,12 +18,14 @@ export function OrganicNatureBg({ variant = 'sage', className = '' }: OrganicNat
         {/* Base gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a2605] via-[#283106] to-[#2a3a0a]" />
 
-        {/* Bokeh circles — CSS blur (GPU-accelerated, no SVG filters) */}
-        <div className="absolute top-[15%] left-[5%] w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full bg-[#777F5C]/25 blur-[80px]" />
-        <div className="absolute top-[30%] right-[10%] w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full bg-[#5a6640]/15 blur-[100px]" />
-        <div className="absolute top-[5%] right-[15%] w-[40vw] h-[40vw] max-w-[400px] max-h-[400px] rounded-full bg-[#4a7a5a]/10 blur-[70px]" />
-        <div className="absolute bottom-[10%] left-[25%] w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full bg-[#777F5C]/12 blur-[60px]" />
-        <div className="absolute bottom-[20%] left-[-5%] w-[35vw] h-[35vw] max-w-[350px] max-h-[350px] rounded-full bg-[#4a7a5a]/8 blur-[60px]" />
+        {/* Breathing bokeh circles — 10s cycle (~0.1Hz) for parasympathetic resonance.
+            Staggered delays create organic asynchrony like a living forest canopy.
+            Amplitude: 3-4% scale, ±2-4% opacity — imperceptible consciously. */}
+        <div className="absolute top-[15%] left-[5%] w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full bg-[#777F5C]/25 blur-[80px] breathe-deep" />
+        <div className="absolute top-[30%] right-[10%] w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full bg-[#5a6640]/15 blur-[100px] breathe-slow" />
+        <div className="absolute top-[5%] right-[15%] w-[40vw] h-[40vw] max-w-[400px] max-h-[400px] rounded-full bg-[#4a7a5a]/10 blur-[70px] breathe-gentle" />
+        <div className="absolute bottom-[10%] left-[25%] w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full bg-[#777F5C]/12 blur-[60px] breathe-faint" />
+        <div className="absolute bottom-[20%] left-[-5%] w-[35vw] h-[35vw] max-w-[350px] max-h-[350px] rounded-full bg-[#4a7a5a]/8 blur-[60px] breathe-whisper" />
 
         {/* Floating leaf — hidden on mobile for performance */}
         <motion.div
@@ -54,8 +56,8 @@ export function OrganicNatureBg({ variant = 'sage', className = '' }: OrganicNat
   if (variant === 'dark') {
     return (
       <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`} aria-hidden="true">
-        <div className="absolute top-[10%] left-[5%] w-[40vw] h-[40vw] max-w-[300px] max-h-[300px] rounded-full bg-[#777F5C]/8 blur-[60px]" />
-        <div className="absolute top-[40%] right-[5%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full bg-[#5a6640]/6 blur-[70px]" />
+        <div className="absolute top-[10%] left-[5%] w-[40vw] h-[40vw] max-w-[300px] max-h-[300px] rounded-full bg-[#777F5C]/8 blur-[60px] breathe-gentle" />
+        <div className="absolute top-[40%] right-[5%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full bg-[#5a6640]/6 blur-[70px] breathe-faint" />
       </div>
     );
   }
@@ -63,8 +65,8 @@ export function OrganicNatureBg({ variant = 'sage', className = '' }: OrganicNat
   if (variant === 'light') {
     return (
       <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`} aria-hidden="true">
-        <div className="absolute top-[20%] right-[10%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] rounded-full bg-[#777F5C]/5 blur-[70px]" />
-        <div className="absolute bottom-[10%] left-[5%] w-[35vw] h-[35vw] max-w-[250px] max-h-[250px] rounded-full bg-[#A39B82]/4 blur-[50px]" />
+        <div className="absolute top-[20%] right-[10%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] rounded-full bg-[#777F5C]/5 blur-[70px] breathe-slow" />
+        <div className="absolute bottom-[10%] left-[5%] w-[35vw] h-[35vw] max-w-[250px] max-h-[250px] rounded-full bg-[#A39B82]/4 blur-[50px] breathe-gentle" />
       </div>
     );
   }
@@ -72,8 +74,8 @@ export function OrganicNatureBg({ variant = 'sage', className = '' }: OrganicNat
   /* variant === 'sage' */
   return (
     <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`} aria-hidden="true">
-      <div className="absolute top-[10%] right-[10%] w-[40vw] h-[40vw] max-w-[300px] max-h-[300px] rounded-full bg-[#777F5C]/6 blur-[60px]" />
-      <div className="absolute bottom-[20%] left-[5%] w-[30vw] h-[30vw] max-w-[220px] max-h-[220px] rounded-full bg-[#777F5C]/4 blur-[50px]" />
+      <div className="absolute top-[10%] right-[10%] w-[40vw] h-[40vw] max-w-[300px] max-h-[300px] rounded-full bg-[#777F5C]/6 blur-[60px] breathe-gentle" />
+      <div className="absolute bottom-[20%] left-[5%] w-[30vw] h-[30vw] max-w-[220px] max-h-[220px] rounded-full bg-[#777F5C]/4 blur-[50px] breathe-faint" />
     </div>
   );
 }
