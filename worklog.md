@@ -365,3 +365,21 @@ Stage Summary:
 - Color temperature shifts: cool-dark-green (top) → warm-light (middle) → warm-dark-earth (bottom)
 - All animations use resonance breathing (0.085 Hz) with consistent scale-only approach
 - No filter:blur() used anywhere (avoids scrollHeight extension bug)
+---
+Task ID: fix-vercel-500
+Agent: main
+Task: Fix Vercel 500 errors on /api/professionals and /api/services
+
+Work Log:
+- Investigated root cause: API routes use `getDb()` which dynamically imports `@prisma/adapter-libsql` at runtime
+- Found that `@prisma/adapter-libsql` was missing from `serverExternalPackages` in next.config.ts, causing the dynamic import to fail when bundled inside Vercel serverless functions
+- Added `@prisma/adapter-libsql` to `serverExternalPackages` so Vercel loads it from a shared layer
+- Wrapped Turso connection init in try/catch with `SELECT 1` verification and descriptive error messages
+- Added `console.error` logging to ALL API route catch blocks (9 routes) so actual errors appear in Vercel function logs
+- Previously all catch blocks used `catch {}` which silently swallowed errors, making debugging impossible
+
+Stage Summary:
+- Key fix: `@prisma/adapter-libsql` added to `serverExternalPackages` in next.config.ts
+- Secondary fix: All API routes now log actual errors to console instead of swallowing them
+- db.ts now validates Turso connection with `SELECT 1` and provides actionable error messages
+- Committed and pushed to main (a87a7ef)
