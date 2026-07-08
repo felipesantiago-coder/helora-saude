@@ -62,7 +62,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ slots, date, professionalId });
-  } catch {
+  } catch (error) {
+    console.error('[API /slots]', error)
     return NextResponse.json({ error: 'Algo deu errado. Vamos tentar juntos novamente?' }, { status: 500 });
   }
 }

@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, appointmentId: appointment.id });
-  } catch {
+  } catch (error) {
+    console.error('[API /appointments POST]', error)
     return NextResponse.json(
       { error: 'Algo deu errado ao criar seu agendamento. Vamos tentar juntos novamente?' },
       { status: 500 }
@@ -62,7 +63,8 @@ export async function GET() {
       take: 50,
     });
     return NextResponse.json(appointments);
-  } catch {
+  } catch (error) {
+    console.error('[API /appointments GET]', error)
     return NextResponse.json({ error: 'Erro ao buscar agendamentos.' }, { status: 500 });
   }
 }
@@ -83,7 +85,8 @@ export async function PATCH(request: NextRequest) {
     });
 
     return NextResponse.json(updated);
-  } catch {
+  } catch (error) {
+    console.error('[API /appointments PATCH]', error)
     return NextResponse.json({ error: 'Erro ao atualizar agendamento.' }, { status: 500 });
   }
 }

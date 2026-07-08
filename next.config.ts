@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
    * - @prisma/client: query engine is large (~12 MB)
    * - @libsql/client: native binding for Turso
    */
-  serverExternalPackages: ["sharp", "@prisma/client", "@libsql/client"],
+  serverExternalPackages: ["sharp", "@prisma/client", "@prisma/adapter-libsql", "@libsql/client"],
 
   headers: async () => [
     {

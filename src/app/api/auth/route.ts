@@ -31,7 +31,8 @@ export async function POST(request: NextRequest) {
       specialty: profile.specialty,
       status: profile.status,
     });
-  } catch {
+  } catch (error) {
+    console.error('[API /auth]', error)
     return NextResponse.json({ error: 'Algo deu errado. Vamos tentar juntos novamente?' }, { status: 500 });
   }
 }

@@ -147,6 +147,7 @@ export async function POST() {
 
     return NextResponse.json({ success: true, message: 'Dados iniciais criados com sucesso.' });
   } catch (error) {
+    console.error('[API /seed POST]', error)
     return NextResponse.json({ success: false, error: 'Erro ao criar dados iniciais.' }, { status: 500 });
   }
 }
@@ -159,7 +160,8 @@ export async function GET() {
     const services = await db.service.findMany();
     const appointments = await db.appointment.count();
     return NextResponse.json({ ageRanges, profiles, services, appointmentCount: appointments });
-  } catch {
+  } catch (error) {
+    console.error('[API /seed GET]', error)
     return NextResponse.json({ error: 'Erro ao consultar dados.' }, { status: 500 });
   }
 }

@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json(result);
-  } catch {
+  } catch (error) {
+    console.error('[API /availability]', error)
     return NextResponse.json({ error: 'Erro ao buscar disponibilidade.' }, { status: 500 });
   }
 }

@@ -9,7 +9,8 @@ export async function GET() {
       orderBy: { price: 'asc' },
     });
     return NextResponse.json(services);
-  } catch {
+  } catch (error) {
+    console.error('[API /services]', error)
     return NextResponse.json({ error: 'Erro ao buscar serviços.' }, { status: 500 });
   }
 }

@@ -68,7 +68,8 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(profiles);
-  } catch {
+  } catch (error) {
+    console.error('[API /professionals GET]', error)
     return NextResponse.json({ error: 'Erro ao buscar profissionais.' }, { status: 500 });
   }
 }
@@ -87,7 +88,8 @@ export async function PATCH(request: NextRequest) {
     });
 
     return NextResponse.json(updated);
-  } catch {
+  } catch (error) {
+    console.error('[API /professionals PATCH]', error)
     return NextResponse.json({ error: 'Erro ao atualizar profissional.' }, { status: 500 });
   }
 }
@@ -128,7 +130,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(profile, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error('[API /professionals POST]', error)
     return NextResponse.json({ error: 'Erro ao criar profissional.' }, { status: 500 });
   }
 }

@@ -18,17 +18,30 @@ async function createPrismaClient(): Promise<PrismaClient> {
   const tursoAuthToken = process.env.TURSO_AUTH_TOKEN
 
   if (tursoUrl) {
-    const { createClient } = await import('@libsql/client')
-    const { PrismaLibSQL } = await import('@prisma/adapter-libsql')
+    try {
+      const { createClient } = await import('@libsql/client')
+      const { PrismaLibSQL } = await import('@prisma/adapter-libsql')
 
-    const libsql = createClient({
-      url: tursoUrl,
-      ...(tursoAuthToken ? { authToken: tursoAuthToken } : {}),
-    })
+      const libsql = createClient({
+        url: tursoUrl,
+        ...(tursoAuthToken ? { authToken: tursoAuthToken } : {}),
+      })
 
-    const adapter = new PrismaLibSQL(libsql)
+      const adapter = new PrismaLibSQL(libsql)
+      const client = new PrismaClient({ adapter, log: logConfig })
 
-    return new PrismaClient({ adapter, log: logConfig })
+      // Verify connection works
+      await client.$queryRaw`SELECT 1`
+      console.log('[DB] Connected to Turso successfully')
+
+      return client
+    } catch (err) {
+      console.error('[DB] Failed to connect to Turso:', err)
+      throw new Error(
+        `[DB] Turso connection failed: ${err instanceof Error ? err.message : String(err)}. ` +
+        'Check TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in Vercel environment variables.'
+      )
+    }
   }
 
   // In production, Turso is required (no persistent filesystem on Vercel)
