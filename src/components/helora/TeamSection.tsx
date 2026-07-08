@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollReveal } from './ScrollReveal';
-import { FloatingLeaf, OrganicBranch } from './OrganicNatureBg';
+import { OrganicNatureBg, FloatingLeaf, OrganicBranch } from './OrganicNatureBg';
 
 interface Professional {
   id: string;
@@ -54,10 +54,8 @@ export function TeamSection() {
 
   return (
     <section id="equipe" className="bg-helora-white py-12 md:py-24 relative overflow-hidden">
-      {/* Organic nature decorations */}
-      <FloatingLeaf className="absolute top-16 left-4 md:left-10" size="md" color="sage" />
-      <FloatingLeaf className="absolute bottom-20 right-6 md:right-14" size="lg" color="dark" />
-      <OrganicBranch className="absolute top-8 right-4 md:right-10 opacity-30" />
+      {/* Forest layer: Forest Floor — horizontal scattered shapes, earth tones emerging */}
+      <OrganicNatureBg variant="forest-floor" />
 
       <div className="max-w-6xl mx-auto px-4 relative z-10">
         <ScrollReveal>

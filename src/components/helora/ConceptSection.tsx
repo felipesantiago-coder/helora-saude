@@ -1,22 +1,13 @@
 'use client';
 
 import { ScrollReveal } from './ScrollReveal';
-import { FloatingLeaf, OrganicBranch } from './OrganicNatureBg';
+import { OrganicNatureBg, FloatingLeaf, OrganicBranch } from './OrganicNatureBg';
 
 export function ConceptSection() {
   return (
     <section id="conceito" className="bg-helora-white py-12 md:py-24 relative overflow-hidden">
-      {/* Organic nature background accents */}
-      <div className="absolute top-0 right-0 pointer-events-none opacity-[0.03] max-w-[50%]" aria-hidden="true">
-        <svg className="w-full h-auto" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M200 20 Q350 80, 340 200 Q330 340, 180 380 Q30 410, 20 260 Q10 100, 200 20Z" fill="#777F5C" />
-          <path d="M200 20 Q350 80, 340 200 Q330 340, 180 380 Q30 410, 20 260 Q10 100, 200 20Z" fill="none" stroke="#777F5C" strokeWidth="1" />
-          <path d="M195 40 Q210 180, 175 350" stroke="#777F5C" strokeWidth="0.5" fill="none" opacity="0.5" />
-          <path d="M195 120 Q160 100, 120 120" stroke="#777F5C" strokeWidth="0.4" fill="none" opacity="0.3" />
-          <path d="M200 180 Q240 160, 280 175" stroke="#777F5C" strokeWidth="0.4" fill="none" opacity="0.3" />
-          <path d="M190 250 Q150 235, 100 250" stroke="#777F5C" strokeWidth="0.4" fill="none" opacity="0.3" />
-        </svg>
-      </div>
+      {/* Forest layer: Understory — vertical vine patterns, entering the forest */}
+      <OrganicNatureBg variant="understory" />
 
       {/* Floating leaf accents */}
       <FloatingLeaf className="absolute top-12 left-4 md:left-12" size="md" color="sage" />

@@ -336,3 +336,32 @@ Stage Summary:
 - Logo oficial aplicada em Header, Footer, BookingWizard, AdminPanel
 - Adaptação de cor via CSS filter mantém consistência visual
 - Commit e push realizados
+---
+Task ID: 1
+Agent: Main Agent
+Task: Extend forest canopy-to-roots visual journey across entire page, based on calming UX research
+
+Work Log:
+- Read all section components, OrganicNatureBg, globals.css, page.tsx to understand full structure
+- Researched and applied calming UX principles: Attention Restoration Theory (Kaplan 1995), Biophilic Design (Kellert & Calabrese 2015), Prospect-Refuge Theory (Appleton 1975), Resonance Breathing (~0.085 Hz)
+- Added 2 new CSS keyframes (breathe-d 11s, breathe-e 13s) for mid-section animation variation
+- Redesigned OrganicNatureBg with 5 forest layer variants: hero (canopy), understory (vine/light-rays), forest-floor (horizontal leaf-litter), soil/mycelium (network patterns), roots (branching downward)
+- Updated ConceptSection with understory background (vertical vine patterns, filtered light)
+- Updated ServicesSection with understory background (light rays, scattered leaves)
+- Updated TeamSection with forest-floor background (horizontal scattered shapes, warm earth tones)
+- Updated TestimonialsSection with forest-floor background (deeper ground-level patterns)
+- Updated CTASection from "light" to "soil" variant (mycelium network, sienna tones)
+- Updated Footer with "roots" variant (branching downward patterns from top)
+- Redesigned OrganicDivider "leaf" to vine-like hanging elements (understory transition)
+- Redesigned OrganicDivider "sage" to ground-cover transition (horizontal emphasis, earth tones)
+- Verified all sections render correctly via Agent Browser + VLM (8-9/10 ratings)
+- Verified no console errors, smooth scrolling, booking CTA works
+- Lint passes (only pre-existing font warning)
+
+Stage Summary:
+- Complete forest canopy-to-roots visual journey implemented across 7 sections
+- Each section uses abstract organic SVG shapes appropriate to its forest layer
+- Shape direction transitions: vertical (understory) → horizontal (forest floor) → network (soil) → branching down (roots)
+- Color temperature shifts: cool-dark-green (top) → warm-light (middle) → warm-dark-earth (bottom)
+- All animations use resonance breathing (0.085 Hz) with consistent scale-only approach
+- No filter:blur() used anywhere (avoids scrollHeight extension bug)

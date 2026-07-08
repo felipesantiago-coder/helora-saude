@@ -1,7 +1,7 @@
 'use client';
 
 import { ScrollReveal } from './ScrollReveal';
-import { FloatingLeaf } from './OrganicNatureBg';
+import { OrganicNatureBg, FloatingLeaf } from './OrganicNatureBg';
 
 const TESTIMONIALS = [
   {
@@ -27,16 +27,8 @@ const TESTIMONIALS = [
 export function TestimonialsSection() {
   return (
     <section className="bg-helora-antique-white/50 py-12 md:py-24 relative overflow-hidden">
-      {/* Organic background elements */}
-      <FloatingLeaf className="absolute top-8 right-6 md:right-20" size="sm" color="sage" />
-      <FloatingLeaf className="absolute bottom-12 left-8 md:left-16" size="md" color="sienna" />
-
-      {/* Large subtle organic shape */}
-      <div className="absolute -bottom-10 -right-10 pointer-events-none animate-breathe max-w-[50%] max-h-[50%]" aria-hidden="true">
-        <svg className="w-full h-auto opacity-[0.03]" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M150 10 Q280 60, 270 170 Q260 280, 140 290 Q20 300, 10 180 Q0 60, 150 10Z" fill="#777F5C" />
-        </svg>
-      </div>
+      {/* Forest layer: Forest Floor — deeper, warmer ground-level patterns */}
+      <OrganicNatureBg variant="forest-floor" />
 
       <div className="max-w-6xl mx-auto px-4 relative z-10">
         <ScrollReveal>

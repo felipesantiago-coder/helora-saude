@@ -5,7 +5,7 @@ import { Leaf } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBookingStore, useAppStore } from '@/stores/helora-store';
 import { ScrollReveal } from './ScrollReveal';
-import { FloatingLeaf } from './OrganicNatureBg';
+import { OrganicNatureBg, FloatingLeaf } from './OrganicNatureBg';
 
 interface Service {
   id: string;
@@ -63,17 +63,8 @@ export function ServicesSection() {
 
   return (
     <section id="servicos" className="bg-helora-antique-white py-12 md:py-24 relative overflow-hidden">
-      {/* Organic background accents */}
-      <FloatingLeaf className="absolute top-20 right-6 md:right-16" size="lg" color="sage" />
-      <FloatingLeaf className="absolute bottom-24 left-4 md:left-12" size="md" color="dark" />
-
-      {/* Subtle organic shape background */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none animate-breathe" aria-hidden="true">
-        <svg width="600" height="600" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-[0.03]">
-          <path d="M300 50 Q500 120, 480 300 Q460 480, 300 520 Q140 560, 100 350 Q60 140, 300 50Z" fill="#777F5C" />
-          <path d="M300 50 Q500 120, 480 300 Q460 480, 300 520 Q140 560, 100 350 Q60 140, 300 50Z" fill="none" stroke="#777F5C" strokeWidth="0.5" />
-        </svg>
-      </div>
+      {/* Forest layer: Understory — deeper understory with light rays */}
+      <OrganicNatureBg variant="understory" />
 
       <div className="max-w-6xl mx-auto px-4 relative z-10">
         <ScrollReveal>

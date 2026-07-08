@@ -200,10 +200,21 @@
     0%, 100% { transform: scale(1); opacity: 1; }
     50% { transform: scale(1.04); opacity: 1; }
   }
+  /* Mid-section gentle pulse — slightly faster for subtle variation */
+  @keyframes breathe-d {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.015); opacity: 1; }
+  }
+  @keyframes breathe-e {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.02); opacity: 1; }
+  }
 
   .breathe-a { animation: breathe-a 12s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite both; will-change: transform; }
   .breathe-b { animation: breathe-b 12s cubic-bezier(0.45, 0.05, 0.55, 0.95) 2.5s infinite both; will-change: transform; }
   .breathe-c { animation: breathe-c 14s cubic-bezier(0.45, 0.05, 0.55, 0.95) 5s infinite both; will-change: transform; }
+  .breathe-d { animation: breathe-d 11s cubic-bezier(0.45, 0.05, 0.55, 0.95) 3.5s infinite both; will-change: transform; }
+  .breathe-e { animation: breathe-e 13s cubic-bezier(0.45, 0.05, 0.55, 0.95) 1.5s infinite both; will-change: transform; }
   .breathe-glow { animation: breathe-glow 12s cubic-bezier(0.45, 0.05, 0.55, 0.95) 1s infinite both; will-change: transform; }
 
   /* Slow drift animation */
@@ -276,6 +287,8 @@
   .breathe-a,
   .breathe-b,
   .breathe-c,
+  .breathe-d,
+  .breathe-e,
   .breathe-glow,
   .animate-drift {
     animation: none;

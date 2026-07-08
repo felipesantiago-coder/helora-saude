@@ -2,28 +2,15 @@
 
 import { useAppStore } from '@/stores/helora-store';
 import { ScrollReveal } from './ScrollReveal';
-import { OrganicNatureBg, FloatingLeaf } from './OrganicNatureBg';
+import { OrganicNatureBg } from './OrganicNatureBg';
 
 export function CTASection() {
   const setView = useAppStore((s) => s.setView);
 
   return (
     <section className="relative overflow-hidden py-16 md:py-28">
-      {/* Organic nature background — light variant */}
-      <OrganicNatureBg variant="light" />
-
-      {/* Additional organic accents */}
-      <FloatingLeaf className="absolute top-8 left-8 md:left-20" size="lg" color="sage" />
-      <FloatingLeaf className="absolute bottom-12 right-8 md:right-16" size="md" color="dark" />
-
-      {/* Breathing organic shape — 10s resonance cycle for calming effect */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none breathe-b" aria-hidden="true">
-        <svg width="500" height="400" viewBox="0 0 500 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-[0.04]">
-          <path d="M250 20 Q450 80, 430 220 Q410 360, 240 380 Q70 400, 40 230 Q10 60, 250 20Z" fill="#777F5C" />
-          <path d="M250 20 Q450 80, 430 220 Q410 360, 240 380 Q70 400, 40 230 Q10 60, 250 20Z" fill="none" stroke="#777F5C" strokeWidth="0.5" />
-          <path d="M245 40 Q260 180, 230 340" stroke="#777F5C" strokeWidth="0.4" fill="none" opacity="0.4" />
-        </svg>
-      </div>
+      {/* Forest layer: Soil/Mycelium — interconnected network, warm sienna tones */}
+      <OrganicNatureBg variant="soil" />
 
       <div className="max-w-2xl mx-auto px-4 text-center relative z-10">
         <ScrollReveal>
