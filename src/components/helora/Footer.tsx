@@ -52,8 +52,15 @@ export function Footer() {
       {/* Top border accent */}
       <div className="h-[2px] bg-gradient-to-r from-transparent via-helora-sage/40 to-transparent" aria-hidden="true" />
       <div className="max-w-6xl mx-auto px-4 pt-12 pb-8 md:pt-16 md:pb-12 relative">
-        {/* Breathing organic glow — 10s cycle for calming parasympathetic resonance */}
-        <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full pointer-events-none breathe-glow" style={{ background: 'radial-gradient(circle, rgba(119,127,92,0.12) 0%, rgba(119,127,92,0) 70%)' }} aria-hidden="true" />
+        {/* Breathing organic glow — 12s cycle for calming parasympathetic resonance.
+            Wrapper handles centering (translate), inner div handles scale animation.
+            Separated to prevent CSS transform override conflict. */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 pointer-events-none" aria-hidden="true">
+          <div
+            className="w-64 h-64 rounded-full breathe-glow"
+            style={{ background: 'radial-gradient(circle, rgba(119,127,92,0.12) 0%, rgba(119,127,92,0) 70%)' }}
+          />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 relative z-10">
           {/* Logo & description */}

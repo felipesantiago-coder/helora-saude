@@ -17,7 +17,7 @@ export function CTASection() {
       <FloatingLeaf className="absolute bottom-12 right-8 md:right-16" size="md" color="dark" />
 
       {/* Breathing organic shape — 10s resonance cycle for calming effect */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none breathe-slow" aria-hidden="true">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none breathe-b" aria-hidden="true">
         <svg width="500" height="400" viewBox="0 0 500 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="opacity-[0.04]">
           <path d="M250 20 Q450 80, 430 220 Q410 360, 240 380 Q70 400, 40 230 Q10 60, 250 20Z" fill="#777F5C" />
           <path d="M250 20 Q450 80, 430 220 Q410 360, 240 380 Q70 400, 40 230 Q10 60, 250 20Z" fill="none" stroke="#777F5C" strokeWidth="0.5" />

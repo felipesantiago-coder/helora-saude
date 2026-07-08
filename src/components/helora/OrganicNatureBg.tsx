@@ -8,8 +8,17 @@ interface OrganicNatureBgProps {
 }
 
 /**
- * Lightweight organic nature background using CSS blur instead of
- * expensive SVG feGaussianBlur filters. Hardware-accelerated.
+ * Organic nature background — forest canopy dappled light.
+ *
+ * Hero bokeh circles use radial-gradient for natural light falloff
+ * (bright center, soft edge) instead of flat bg-color + heavy blur.
+ * This creates a visible, painterly "light filtering through leaves" effect
+ * while still feeling soft and calming.
+ *
+ * Animations: only scale-based breathing (no opacity changes in keyframes).
+ * The opacity is baked into the radial-gradient itself, so there's no
+ * opacity mismatch between CSS class and animation keyframes — no jumps.
+ * fill-mode: both + cubic-bezier(0.45,0.05,0.55,0.95) ensure buttery smoothness.
  */
 export function OrganicNatureBg({ variant = 'sage', className = '' }: OrganicNatureBgProps) {
   if (variant === 'hero') {
@@ -18,14 +27,130 @@ export function OrganicNatureBg({ variant = 'sage', className = '' }: OrganicNat
         {/* Base gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#1a2605] via-[#283106] to-[#2a3a0a]" />
 
-        {/* Breathing bokeh circles — 10s cycle (~0.1Hz) for parasympathetic resonance.
-            Staggered delays create organic asynchrony like a living forest canopy.
-            Amplitude: 3-4% scale, ±2-4% opacity — imperceptible consciously. */}
-        <div className="absolute top-[15%] left-[5%] w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full bg-[#777F5C]/25 blur-[80px] breathe-deep" />
-        <div className="absolute top-[30%] right-[10%] w-[60vw] h-[60vw] max-w-[600px] max-h-[600px] rounded-full bg-[#5a6640]/15 blur-[100px] breathe-slow" />
-        <div className="absolute top-[5%] right-[15%] w-[40vw] h-[40vw] max-w-[400px] max-h-[400px] rounded-full bg-[#4a7a5a]/10 blur-[70px] breathe-gentle" />
-        <div className="absolute bottom-[10%] left-[25%] w-[50vw] h-[50vw] max-w-[500px] max-h-[500px] rounded-full bg-[#777F5C]/12 blur-[60px] breathe-faint" />
-        <div className="absolute bottom-[20%] left-[-5%] w-[35vw] h-[35vw] max-w-[350px] max-h-[350px] rounded-full bg-[#4a7a5a]/8 blur-[60px] breathe-whisper" />
+        {/* ── Forest canopy bokeh circles ──
+            Each circle: radial-gradient with built-in opacity falloff.
+            Sizes & positions scattered like dappled sunlight through leaves.
+            Warm sage, cool sage, and faint green tones for depth. */}
+
+        {/* Large warm glow — upper left, main dappled light source */}
+        <div
+          className="absolute breathe-a"
+          style={{
+            top: '5%',
+            left: '-5%',
+            width: '55vw',
+            height: '55vw',
+            maxWidth: 550,
+            maxHeight: 550,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(170,180,130,0.40) 0%, rgba(140,150,100,0.20) 35%, rgba(119,127,92,0) 70%)',
+          }}
+        />
+
+        {/* Bright patch — upper right, a gap in the canopy with direct light */}
+        <div
+          className="absolute breathe-b"
+          style={{
+            top: '-5%',
+            right: '5%',
+            width: '45vw',
+            height: '45vw',
+            maxWidth: 420,
+            maxHeight: 420,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(180,190,140,0.38) 0%, rgba(150,160,110,0.18) 40%, rgba(119,127,92,0) 70%)',
+          }}
+        />
+
+        {/* Warm sienna accent — center-left, warm-toned dappled light */}
+        <div
+          className="absolute breathe-c"
+          style={{
+            top: '25%',
+            left: '15%',
+            width: '40vw',
+            height: '40vw',
+            maxWidth: 380,
+            maxHeight: 380,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(180,145,100,0.30) 0%, rgba(156,97,70,0.12) 40%, rgba(119,127,92,0) 68%)',
+          }}
+        />
+
+        {/* Cool green light — right-center, lush foliage glow */}
+        <div
+          className="absolute breathe-a"
+          style={{
+            top: '35%',
+            right: '-2%',
+            width: '35vw',
+            height: '35vw',
+            maxWidth: 320,
+            maxHeight: 320,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(120,170,130,0.35) 0%, rgba(90,140,100,0.15) 40%, rgba(74,122,90,0) 70%)',
+          }}
+        />
+
+        {/* Large diffuse base glow — lower center, ambient forest light */}
+        <div
+          className="absolute breathe-b"
+          style={{
+            bottom: '5%',
+            left: '20%',
+            width: '60vw',
+            height: '60vw',
+            maxWidth: 600,
+            maxHeight: 600,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(150,160,115,0.28) 0%, rgba(119,127,92,0.12) 45%, rgba(90,102,64,0) 75%)',
+          }}
+        />
+
+        {/* Small bright sun ray — upper center, direct light beam */}
+        <div
+          className="absolute breathe-c"
+          style={{
+            top: '12%',
+            left: '40%',
+            width: '25vw',
+            height: '25vw',
+            maxWidth: 220,
+            maxHeight: 220,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(200,210,160,0.40) 0%, rgba(170,180,130,0.15) 50%, rgba(140,150,100,0) 75%)',
+          }}
+        />
+
+        {/* Bottom-left soft patch — scattered ground-level light */}
+        <div
+          className="absolute breathe-a"
+          style={{
+            bottom: '15%',
+            left: '-5%',
+            width: '30vw',
+            height: '30vw',
+            maxWidth: 280,
+            maxHeight: 280,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(160,168,120,0.32) 0%, rgba(130,138,95,0.12) 45%, rgba(100,110,72,0) 70%)',
+          }}
+        />
+
+        {/* Right edge light — prevents the right side from being too dark */}
+        <div
+          className="absolute breathe-b"
+          style={{
+            top: '55%',
+            right: '-8%',
+            width: '35vw',
+            height: '35vw',
+            maxWidth: 340,
+            maxHeight: 340,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(145,155,110,0.30) 0%, rgba(119,127,92,0.10) 45%, rgba(100,110,72,0) 72%)',
+          }}
+        />
 
         {/* Floating leaf — hidden on mobile for performance */}
         <motion.div
@@ -56,8 +181,32 @@ export function OrganicNatureBg({ variant = 'sage', className = '' }: OrganicNat
   if (variant === 'dark') {
     return (
       <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`} aria-hidden="true">
-        <div className="absolute top-[10%] left-[5%] w-[40vw] h-[40vw] max-w-[300px] max-h-[300px] rounded-full bg-[#777F5C]/8 blur-[60px] breathe-gentle" />
-        <div className="absolute top-[40%] right-[5%] w-[50vw] h-[50vw] max-w-[400px] max-h-[400px] rounded-full bg-[#5a6640]/6 blur-[70px] breathe-faint" />
+        <div
+          className="absolute breathe-b"
+          style={{
+            top: '10%',
+            left: '5%',
+            width: '40vw',
+            height: '40vw',
+            maxWidth: 300,
+            maxHeight: 300,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(119,127,92,0.12) 0%, rgba(119,127,92,0) 70%)',
+          }}
+        />
+        <div
+          className="absolute breathe-c"
+          style={{
+            top: '40%',
+            right: '5%',
+            width: '50vw',
+            height: '50vw',
+            maxWidth: 400,
+            maxHeight: 400,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(90,102,64,0.08) 0%, rgba(90,102,64,0) 70%)',
+          }}
+        />
       </div>
     );
   }
@@ -65,8 +214,32 @@ export function OrganicNatureBg({ variant = 'sage', className = '' }: OrganicNat
   if (variant === 'light') {
     return (
       <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`} aria-hidden="true">
-        <div className="absolute top-[20%] right-[10%] w-[45vw] h-[45vw] max-w-[350px] max-h-[350px] rounded-full bg-[#777F5C]/5 blur-[70px] breathe-slow" />
-        <div className="absolute bottom-[10%] left-[5%] w-[35vw] h-[35vw] max-w-[250px] max-h-[250px] rounded-full bg-[#A39B82]/4 blur-[50px] breathe-gentle" />
+        <div
+          className="absolute breathe-b"
+          style={{
+            top: '20%',
+            right: '10%',
+            width: '45vw',
+            height: '45vw',
+            maxWidth: 350,
+            maxHeight: 350,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(119,127,92,0.08) 0%, rgba(119,127,92,0) 70%)',
+          }}
+        />
+        <div
+          className="absolute breathe-a"
+          style={{
+            bottom: '10%',
+            left: '5%',
+            width: '35vw',
+            height: '35vw',
+            maxWidth: 250,
+            maxHeight: 250,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(163,155,130,0.06) 0%, rgba(163,155,130,0) 70%)',
+          }}
+        />
       </div>
     );
   }
@@ -74,8 +247,32 @@ export function OrganicNatureBg({ variant = 'sage', className = '' }: OrganicNat
   /* variant === 'sage' */
   return (
     <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`} aria-hidden="true">
-      <div className="absolute top-[10%] right-[10%] w-[40vw] h-[40vw] max-w-[300px] max-h-[300px] rounded-full bg-[#777F5C]/6 blur-[60px] breathe-gentle" />
-      <div className="absolute bottom-[20%] left-[5%] w-[30vw] h-[30vw] max-w-[220px] max-h-[220px] rounded-full bg-[#777F5C]/4 blur-[50px] breathe-faint" />
+      <div
+        className="absolute breathe-b"
+        style={{
+          top: '10%',
+          right: '10%',
+          width: '40vw',
+          height: '40vw',
+          maxWidth: 300,
+          maxHeight: 300,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(119,127,92,0.08) 0%, rgba(119,127,92,0) 70%)',
+        }}
+      />
+      <div
+        className="absolute breathe-c"
+        style={{
+          bottom: '20%',
+          left: '5%',
+          width: '30vw',
+          height: '30vw',
+          maxWidth: 220,
+          maxHeight: 220,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(119,127,92,0.06) 0%, rgba(119,127,92,0) 70%)',
+        }}
+      />
     </div>
   );
 }
