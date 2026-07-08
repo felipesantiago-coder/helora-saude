@@ -60,7 +60,7 @@ export function Header() {
           : 'bg-helora-white/95 backdrop-blur-md shadow-organic text-helora-dark-coffee'
       }`}
     >
-      <div className="max-w-6xl mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto px-4 h-14 sm:h-16 lg:h-[72px] flex items-center justify-between">
         {/* Logo + subtitle */}
         <button
           onClick={() => scrollToSection('#hero')}
