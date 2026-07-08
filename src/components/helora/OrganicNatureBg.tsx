@@ -336,11 +336,11 @@ export function OrganicNatureBg({ variant = 'sage', className = '' }: OrganicNat
           <ellipse cx="1350" cy="200" rx="22" ry="7" transform="rotate(-55 1350 200)" fill="rgba(119,127,92,0.025)" />
           <ellipse cx="80" cy="680" rx="24" ry="8" transform="rotate(15 80 680)" fill="rgba(163,155,130,0.02)" />
           <ellipse cx="480" cy="540" rx="20" ry="7" transform="rotate(-25 480 540)" fill="rgba(119,127,92,0.02)" />
-
-          {/* Subtle warm bokeh spots */}
-          <div style={{ position: 'absolute', top: '20%', left: '10%', width: '30vw', height: '30vw', maxWidth: 280, maxHeight: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(163,155,130,0.06) 0%, rgba(163,155,130,0) 65%)' }} />
-          <div style={{ position: 'absolute', top: '50%', right: '5%', width: '35vw', height: '35vw', maxWidth: 320, maxHeight: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(156,97,70,0.04) 0%, rgba(156,97,70,0) 65%)' }} />
         </svg>
+
+        {/* Subtle warm bokeh spots — must be OUTSIDE <svg> (HTML div invalid inside SVG) */}
+        <div className="absolute breathe-d" style={{ top: '20%', left: '10%', width: '30vw', height: '30vw', maxWidth: 280, maxHeight: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(163,155,130,0.06) 0%, rgba(163,155,130,0) 65%)' }} />
+        <div className="absolute breathe-a" style={{ top: '50%', right: '5%', width: '35vw', height: '35vw', maxWidth: 320, maxHeight: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(156,97,70,0.04) 0%, rgba(156,97,70,0) 65%)' }} />
       </div>
     );
   }
