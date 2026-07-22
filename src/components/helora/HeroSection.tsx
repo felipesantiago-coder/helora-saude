@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/helora-store';
 
@@ -35,7 +35,11 @@ const BLOBS: [BlobCfg, BlobCfg, BlobCfg] = [
 ];
 
 function useLiquidBlobs(containerRef: React.RefObject<HTMLElement | null>) {
-  const refs = useRef<(HTMLDivElement | null)[]>([]);
+  const blob0 = useRef<HTMLDivElement>(null);
+  const blob1 = useRef<HTMLDivElement>(null);
+  const blob2 = useRef<HTMLDivElement>(null);
+  const blobs = [blob0, blob1, blob2] as const;
+
   const st = useRef({
     mx: 0, my: 0,
     pos: [[0, 0], [0, 0], [0, 0]] as [number, number][],
@@ -45,54 +49,59 @@ function useLiquidBlobs(containerRef: React.RefObject<HTMLElement | null>) {
     lastMove: 0,
   });
 
-  const tick = useCallback(() => {
-    const s = st.current;
-    const el = containerRef.current;
-    if (!el) return;
+  /* Animation loop — uses ref to avoid stale closure */
+  const tickRef = useRef<() => void>(() => {});
 
-    s.phase += 0.004;
-    const elapsed = performance.now() - s.lastMove;
-    const mW = s.hasMouse ? Math.max(0, 1 - elapsed / 3000) : 0;
-    const vw = el.clientWidth;
-    const vh = el.clientHeight;
+  useEffect(() => {
+    tickRef.current = () => {
+      const s = st.current;
+      const el = containerRef.current;
+      if (!el) return;
 
-    for (let i = 0; i < 3; i++) {
-      const c = BLOBS[i];
-      const blob = refs.current[i];
-      if (!blob) continue;
+      s.phase += 0.004;
+      const elapsed = performance.now() - s.lastMove;
+      const mW = s.hasMouse ? Math.max(0, 1 - elapsed / 3000) : 0;
+      const vw = el.clientWidth;
+      const vh = el.clientHeight;
 
-      const aX = Math.sin(s.phase * (0.7 + i * 0.3) + i * 2.1) * 20
-               + Math.sin(s.phase * 0.4 + i * 4.3) * 10;
-      const aY = Math.cos(s.phase * (0.5 + i * 0.25) + i * 1.7) * 15
-               + Math.cos(s.phase * 0.35 + i * 3.1) * 8;
+      for (let i = 0; i < 3; i++) {
+        const c = BLOBS[i];
+        const blob = blobs[i].current;
+        if (!blob) continue;
 
-      const tx = s.mx * c.range + c.offX + aX * mW;
-      const ty = s.my * c.range + c.offY + aY * mW;
+        const aX = Math.sin(s.phase * (0.7 + i * 0.3) + i * 2.1) * 20
+                 + Math.sin(s.phase * 0.4 + i * 4.3) * 10;
+        const aY = Math.cos(s.phase * (0.5 + i * 0.25) + i * 1.7) * 15
+                 + Math.cos(s.phase * 0.35 + i * 3.1) * 8;
 
-      s.pos[i][0] += (tx - s.pos[i][0]) * c.lerp;
-      s.pos[i][1] += (ty - s.pos[i][1]) * c.lerp;
+        const tx = s.mx * c.range + c.offX + aX * mW;
+        const ty = s.my * c.range + c.offY + aY * mW;
 
-      blob.style.transform = `translate(${s.pos[i][0] * vw}px, ${s.pos[i][1] * vh}px)`;
-    }
+        s.pos[i][0] += (tx - s.pos[i][0]) * c.lerp;
+        s.pos[i][1] += (ty - s.pos[i][1]) * c.lerp;
 
-    s.raf = requestAnimationFrame(tick);
-  }, [containerRef]);
+        blob.style.transform = `translate(${s.pos[i][0] * vw}px, ${s.pos[i][1] * vh}px)`;
+      }
+
+      s.raf = requestAnimationFrame(tickRef.current!);
+    };
+  });
 
   /* Start / stop animation */
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (!mq.matches) st.current.raf = requestAnimationFrame(tick);
+    if (!mq.matches) st.current.raf = requestAnimationFrame(tickRef.current!);
 
     function onChange(m: MediaQueryListEvent) {
       if (m.matches) cancelAnimationFrame(st.current.raf);
-      else st.current.raf = requestAnimationFrame(tick);
+      else st.current.raf = requestAnimationFrame(tickRef.current!);
     }
     mq.addEventListener('change', onChange);
     return () => {
       cancelAnimationFrame(st.current.raf);
       mq.removeEventListener('change', onChange);
     };
-  }, [tick]);
+  }, []);
 
   /* Mouse tracking */
   useEffect(() => {
@@ -109,15 +118,15 @@ function useLiquidBlobs(containerRef: React.RefObject<HTMLElement | null>) {
 
     el.addEventListener('mousemove', onMove, { passive: true });
     return () => el.removeEventListener('mousemove', onMove);
-  }, [containerRef]);
+  }, []);
 
-  return refs;
+  return blobs;
 }
 
 export function HeroSection() {
   const setView = useAppStore((s) => s.setView);
   const sectionRef = useRef<HTMLElement>(null);
-  const blobRefs = useLiquidBlobs(sectionRef);
+  const [blob0, blob1, blob2] = useLiquidBlobs(sectionRef);
 
   return (
     <section
@@ -125,45 +134,51 @@ export function HeroSection() {
       id="hero"
       className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden"
     >
-      {/* - Liquid Background - */
+      {/* - Liquid Background - */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        {/* Smooth base gradient - brand greens */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#1c2a06] via-[#283106] to-[#2f3d12]" />
+        {/* Smooth natural base gradient — canopy-to-understory depth */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(175deg, #182405 0%, #1f2e07 25%, #283106 50%, #273009 75%, #242c0a 100%)',
+          }}
+        />
 
-        {/* Blob A - large, deep green, slow follow */}
+        {/* Blob A - large, deep canopy glow, slow follow */}
         <div className="absolute inset-0">
           <div
-            ref={(el) => { blobRefs.current[0] = el; }}
+            ref={blob0}
             className="absolute will-change-transform"
             style={{
-              top: '15%',
-              left: '25%',
-              width: '70vw',
-              height: '60vh',
-              maxWidth: 750,
-              maxHeight: 550,
+              top: '10%',
+              left: '20%',
+              width: '80vw',
+              height: '65vh',
+              maxWidth: 800,
+              maxHeight: 600,
               borderRadius: '50%',
               background:
-                'radial-gradient(ellipse at 50% 50%, rgba(60,82,28,0.18) 0%, rgba(50,70,22,0.08) 40%, transparent 70%)',
+                'radial-gradient(ellipse at 50% 45%, rgba(65,90,30,0.22) 0%, rgba(50,72,22,0.10) 40%, transparent 70%)',
             }}
           />
         </div>
 
-        {/* Blob B - medium, sage-tinted, medium follow */}
+        {/* Blob B - medium, sage light shaft, medium follow */}
         <div className="absolute inset-0">
           <div
-            ref={(el) => { blobRefs.current[1] = el; }}
+            ref={blob1}
             className="absolute will-change-transform"
             style={{
-              top: '30%',
-              left: '40%',
-              width: '55vw',
-              height: '50vh',
-              maxWidth: 560,
-              maxHeight: 420,
+              top: '25%',
+              left: '35%',
+              width: '60vw',
+              height: '55vh',
+              maxWidth: 600,
+              maxHeight: 450,
               borderRadius: '50%',
               background:
-                'radial-gradient(ellipse at 50% 50%, rgba(90,105,55,0.14) 0%, rgba(75,90,45,0.06) 42%, transparent 68%)',
+                'radial-gradient(ellipse at 50% 50%, rgba(100,115,65,0.15) 0%, rgba(80,95,50,0.06) 45%, transparent 70%)',
             }}
           />
         </div>
@@ -171,28 +186,30 @@ export function HeroSection() {
         {/* Blob C - small, warm sienna accent, fast follow */}
         <div className="absolute inset-0">
           <div
-            ref={(el) => { blobRefs.current[2] = el; }}
+            ref={blob2}
             className="absolute will-change-transform"
             style={{
-              bottom: '20%',
-              right: '15%',
-              width: '40vw',
-              height: '40vh',
-              maxWidth: 380,
-              maxHeight: 340,
+              bottom: '18%',
+              right: '12%',
+              width: '45vw',
+              height: '42vh',
+              maxWidth: 400,
+              maxHeight: 360,
               borderRadius: '50%',
               background:
-                'radial-gradient(ellipse at 50% 50%, rgba(156,97,70,0.08) 0%, rgba(130,80,55,0.03) 45%, transparent 65%)',
+                'radial-gradient(ellipse at 55% 55%, rgba(156,97,70,0.10) 0%, rgba(140,85,58,0.04) 45%, transparent 68%)',
             }}
           />
         </div>
 
-        {/* Subtle vignette for depth */}
+        {/* Central canopy light + vignette for depth */}
         <div
           className="absolute inset-0"
           style={{
-            background:
-              'radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(15,22,4,0.35) 100%)',
+            background: [
+              'radial-gradient(ellipse at 50% 35%, rgba(85,105,50,0.06) 0%, transparent 50%)',
+              'radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(10,16,3,0.40) 100%)',
+            ].join(', '),
           }}
         />
       </div>

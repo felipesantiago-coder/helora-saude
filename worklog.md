@@ -422,3 +422,34 @@ Stage Summary:
 - When Turso is configured and seeded, real data takes priority automatically
 - When API fails or DB is empty, mock data provides seamless UX
 - Pushed to main (6e9a4af)
+
+---
+Task ID: liquid-hero-effect
+Agent: main
+Task: Fix liquid mouse-reactive hero effect (lint errors) + adjust gradient to smooth natural green
+
+Work Log:
+- Found malformed JSX comment on line 128 (missing closing `*/`) causing TS1005 parsing error
+- Fixed comment: `{/* - Liquid Background - *` → `{/* - Liquid Background - */}`
+- Fixed 4 ESLint errors in HeroSection.tsx:
+  1. `tick` referencing itself before declaration (useCallback recursion): replaced with `tickRef` pattern inside useEffect
+  2. Three `blobRefs.current[N] = el` immutability violations: replaced array ref with 3 individual `useRef<HTMLDivElement>`
+- Removed unused `useCallback` import
+- Adjusted hero gradient from simple 3-stop to smooth 5-stop natural canopy depth:
+  - `linear-gradient(175deg, #182405 0%, #1f2e07 25%, #283106 50%, #273009 75%, #242c0a 100%)`
+  - 175deg angle for natural non-vertical feel
+  - Color stops closer together for seamless transition
+  - Brand green #283106 as center anchor
+- Enhanced blob A: larger (80vw×65vh), positioned higher, slightly brighter green glow (0.22 opacity)
+- Enhanced blob B: slightly larger (60vw×55vh), more sage-tinted (0.15 opacity)
+- Enhanced blob C: slightly larger (45vw×42vh), increased sienna warmth (0.10 opacity)
+- Added dual-layer vignette: central canopy light glow + darker edge vignette (0.40 opacity)
+- Verified: lint clean (0 errors, 1 pre-existing font warning), HTTP 200 on compilation
+
+Stage Summary:
+- Liquid mouse-reactive hero effect fully working with clean code
+- 3 gradient blobs follow mouse at different lerp speeds (0.015/0.03/0.05) for liquid parallax feel
+- Ambient sine drift when idle >3s or on mobile (no mouse)
+- Smooth natural 5-stop green gradient replacing harsh 3-stop
+- Enhanced vignette with canopy light simulation
+- No filter:blur() used (avoids scrollHeight bug)
