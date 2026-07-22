@@ -453,3 +453,27 @@ Stage Summary:
 - Smooth natural 5-stop green gradient replacing harsh 3-stop
 - Enhanced vignette with canopy light simulation
 - No filter:blur() used (avoids scrollHeight bug)
+
+---
+Task ID: liquid-hero-bugfix
+Agent: main
+Task: Fix liquid hero effect — 3 critical bugs preventing visible movement
+
+Work Log:
+- Bug 1 (CRITICAL): Ambient drift (aX, aY) was multiplied by `mW` which is 0 when no mouse moved — blobs stayed completely static
+- Bug 2: Unit mismatch — aX was in pixels (±30px) but tx was in viewport fractions, causing potential huge jumps
+- Bug 3: Early return `if (!el) return` killed animation loop permanently without scheduling next frame
+- Removed `hasMouse` flag — unnecessary, mouseW naturally decays via elapsed time
+- Added `driftAmp` per blob (0.035, 0.045, 0.055) — controls ambient drift intensity in vp fractions
+- All math now consistently in viewport-fraction units
+- Ambient drift always active (not gated by mouse state)
+- Mouse movement adds directional pull that fades from 1→0 over 3 seconds
+- Animation loop never dies (rAF always scheduled, el null = use vw/vh=1)
+- Slightly increased lerp values (0.02/0.035/0.055) for more responsive feel
+- Verified: lint clean, HTTP 200 compilation
+
+Stage Summary:
+- Blobs now visibly drift in organic sine-wave patterns at all times
+- Mouse movement adds liquid reactive pull on top of ambient drift
+- ~±55px drift amplitude on 1000px viewport — clearly visible
+- No filter:blur(), transform-only, prefers-reduced-motion supported

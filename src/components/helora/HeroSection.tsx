@@ -8,16 +8,15 @@ import { useAppStore } from '@/stores/helora-store';
  * LIQUID MOUSE-REACTIVE HERO BACKGROUND
  * ==========================================================================
  *
- * 3 large gradient blobs follow the mouse at different speeds via rAF,
- * creating a parallax depth effect that feels like a liquid surface.
+ * 3 large gradient blobs drift organically via rAF.
+ * Each blob follows a unique sine-wave path (always active).
+ * Mouse movement adds directional pull that fades over 3 s.
  *
- *   Blob A (lerp 0.015): deep green, largest  - slow, background
- *   Blob B (lerp 0.03):  sage green, medium   - mid layer
- *   Blob C (lerp 0.05):  warm sienna, smallest - fast accent
+ *   Blob A (lerp 0.02): deep green, largest  — slow, background
+ *   Blob B (lerp 0.035): sage green, medium   — mid layer
+ *   Blob C (lerp 0.055): warm sienna, smallest — fast accent
  *
- * When idle >3 s, ambient sine drift takes over.
- * On mobile (no mouse), ambient drift plays continuously.
- *
+ * All maths in viewport-fraction units (−0.5 … 0.5).
  * Performance: transform-only via rAF. No filter:blur().
  * ========================================================================== */
 
@@ -26,12 +25,13 @@ interface BlobCfg {
   range: number;
   offX: number;
   offY: number;
+  driftAmp: number;
 }
 
 const BLOBS: [BlobCfg, BlobCfg, BlobCfg] = [
-  { lerp: 0.015, range: 0.12, offX: -0.05, offY: -0.08 },
-  { lerp: 0.03,  range: 0.18, offX:  0.08, offY:  0.04 },
-  { lerp: 0.05,  range: 0.22, offX: -0.03, offY:  0.06 },
+  { lerp: 0.02,  range: 0.10, offX: -0.04, offY: -0.03, driftAmp: 0.035 },
+  { lerp: 0.035, range: 0.15, offX:  0.05, offY:  0.03, driftAmp: 0.045 },
+  { lerp: 0.055, range: 0.20, offX: -0.02, offY:  0.04, driftAmp: 0.055 },
 ];
 
 function useLiquidBlobs(containerRef: React.RefObject<HTMLElement | null>) {
@@ -45,38 +45,48 @@ function useLiquidBlobs(containerRef: React.RefObject<HTMLElement | null>) {
     pos: [[0, 0], [0, 0], [0, 0]] as [number, number][],
     phase: 0,
     raf: 0,
-    hasMouse: false,
     lastMove: 0,
   });
 
-  /* Animation loop — uses ref to avoid stale closure */
+  /* ------------------------------------------------------------------
+   * Animation loop — defined once via ref, reads latest refs each frame
+   * ---------------------------------------------------------------- */
   const tickRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     tickRef.current = () => {
       const s = st.current;
       const el = containerRef.current;
-      if (!el) return;
 
-      s.phase += 0.004;
+      s.phase += 0.003;
+
+      /* Mouse weight: 1 right after move → 0 after 3 s */
       const elapsed = performance.now() - s.lastMove;
-      const mW = s.hasMouse ? Math.max(0, 1 - elapsed / 3000) : 0;
-      const vw = el.clientWidth;
-      const vh = el.clientHeight;
+      const mouseW = Math.max(0, 1 - elapsed / 3000);
+
+      const vw = el ? el.clientWidth : 1;
+      const vh = el ? el.clientHeight : 1;
 
       for (let i = 0; i < 3; i++) {
         const c = BLOBS[i];
         const blob = blobs[i].current;
         if (!blob) continue;
 
-        const aX = Math.sin(s.phase * (0.7 + i * 0.3) + i * 2.1) * 20
-                 + Math.sin(s.phase * 0.4 + i * 4.3) * 10;
-        const aY = Math.cos(s.phase * (0.5 + i * 0.25) + i * 1.7) * 15
-                 + Math.cos(s.phase * 0.35 + i * 3.1) * 8;
+        /* Ambient sine drift — always active, all units in vp fraction */
+        const aX = (
+          Math.sin(s.phase * (0.7 + i * 0.3) + i * 2.1) * 0.6 +
+          Math.sin(s.phase * 0.4 + i * 4.3) * 0.4
+        ) * c.driftAmp;
+        const aY = (
+          Math.cos(s.phase * (0.5 + i * 0.25) + i * 1.7) * 0.6 +
+          Math.cos(s.phase * 0.35 + i * 3.1) * 0.4
+        ) * c.driftAmp;
 
-        const tx = s.mx * c.range + c.offX + aX * mW;
-        const ty = s.my * c.range + c.offY + aY * mW;
+        /* Target = ambient drift (always) + mouse pull (fades) + base offset */
+        const tx = aX + s.mx * c.range * mouseW + c.offX;
+        const ty = aY + s.my * c.range * mouseW + c.offY;
 
+        /* Smooth lerp toward target */
         s.pos[i][0] += (tx - s.pos[i][0]) * c.lerp;
         s.pos[i][1] += (ty - s.pos[i][1]) * c.lerp;
 
@@ -90,11 +100,16 @@ function useLiquidBlobs(containerRef: React.RefObject<HTMLElement | null>) {
   /* Start / stop animation */
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (!mq.matches) st.current.raf = requestAnimationFrame(tickRef.current!);
+    if (!mq.matches) {
+      st.current.raf = requestAnimationFrame(tickRef.current!);
+    }
 
     function onChange(m: MediaQueryListEvent) {
-      if (m.matches) cancelAnimationFrame(st.current.raf);
-      else st.current.raf = requestAnimationFrame(tickRef.current!);
+      if (m.matches) {
+        cancelAnimationFrame(st.current.raf);
+      } else {
+        st.current.raf = requestAnimationFrame(tickRef.current!);
+      }
     }
     mq.addEventListener('change', onChange);
     return () => {
@@ -112,7 +127,6 @@ function useLiquidBlobs(containerRef: React.RefObject<HTMLElement | null>) {
       const r = el.getBoundingClientRect();
       st.current.mx = (e.clientX - r.left) / r.width - 0.5;
       st.current.my = (e.clientY - r.top) / r.height - 0.5;
-      st.current.hasMouse = true;
       st.current.lastMove = performance.now();
     }
 
