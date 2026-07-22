@@ -538,3 +538,22 @@ Stage Summary:
   2. Concentric ripple rings expanding from cursor position
 - Ripples visually mimic water surface disturbance
 - No filter:blur() used
+---
+Task ID: 1
+Agent: main
+Task: Remove blob effect and slow down ripple waves in hero
+
+Work Log:
+- Read current HeroSection.tsx (3 blobs with spring physics + CSS ripple rings)
+- Read globals.css liquid-ripple keyframe (2.2s cubic-bezier, 550px rings)
+- Rewrote HeroSection.tsx: removed all 3 blob divs, blob refs, spring/velocity state, rAF animation loop
+- Simplified useEffect to only handle ripple spawning on mousemove
+- Updated globals.css: animation 2.2s → 4.5s ease-out, opacity 1 → 0.9 with 30% mid-keyframe, gradient band thinner (60%→20% width), peak opacity 0.18 → 0.14
+- Updated spawnRipple in TSX: interval 180ms → 350ms, ring stagger 0.22s → 0.5s, ring sizes 550/400 → 700/520
+- Verified via curl: no blob references in compiled HTML, ripple CSS shows 4.5s ease-out
+- Committed and pushed to main (387c87a)
+
+Stage Summary:
+- Blobs completely removed from hero — clean gradient background only
+- Ripples are now ~2x slower and smoother (4.5s vs 2.2s)
+- Less frequent spawn, thinner rings, gentler opacity — more like calm lake ripples
