@@ -477,3 +477,35 @@ Stage Summary:
 - Mouse movement adds liquid reactive pull on top of ambient drift
 - ~±55px drift amplitude on 1000px viewport — clearly visible
 - No filter:blur(), transform-only, prefers-reduced-motion supported
+
+---
+Task ID: liquid-hero-invisible-fix
+Agent: main
+Task: Investigate and fix liquid hero effect that was technically running but imperceptible
+
+Work Log:
+- Traced animation math frame-by-frame: frame 1 = 0.088px displacement (sub-pixel!)
+- Root cause: effect WAS running but was invisible due to:
+  1. Blob opacity 10-22% on dark background — blobs barely visible
+  2. Movement ±50px on 800px blob = 6% shift — imperceptible
+  3. Sine period ~50 seconds — too slow to notice movement
+  4. Phase speed 0.003/frame — takes 10s to reach 36px displacement
+  5. Lerp 0.02 — heavy smoothing adds more lag
+- Rewrote entire component with single useEffect (no tickRef complexity):
+  - Phase speed: 0.003 → 0.008 (2.7x faster, ~16s period)
+  - Drift amplitude: 0.035-0.055 → 0.06-0.10 (1.7-1.8x larger)
+  - Lerp: 0.02-0.055 → 0.025-0.06 (more responsive)
+  - Mouse range: 0.10-0.20 → 0.18-0.32 (60-80% more pull)
+  - Mouse fade: 3s → 2.5s (snappier feel)
+  - Blob opacity: +36-60% brighter (A: 0.30, B: 0.22, C: 0.16)
+  - Blob size slightly increased for more visual presence
+- Eliminated useLiquidBlobs hook — all logic in single useEffect
+- Removed tickRef pattern — function defined directly inside effect
+- Proper cleanup: cancelAnimationFrame + removeEventListener in single return
+
+Stage Summary:
+- Movement now clearly visible: ~86-144px displacement on 1440px viewport
+- Full sine cycle in ~8-16 seconds (was 27-50 seconds)
+- Mouse pull up to 230px on Blob C — dramatic liquid feel
+- Single clean useEffect with proper lifecycle management
+- No more subtle/imperceptible effect
