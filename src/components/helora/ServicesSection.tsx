@@ -5,7 +5,7 @@ import { Leaf } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBookingStore, useAppStore } from '@/stores/helora-store';
 import { ScrollReveal } from './ScrollReveal';
-import { OrganicNatureBg, FloatingLeaf } from './OrganicNatureBg';
+import { OrganicNatureBg } from './OrganicNatureBg';
 
 interface Service {
   id: string;

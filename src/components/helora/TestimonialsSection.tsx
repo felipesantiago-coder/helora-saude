@@ -1,7 +1,7 @@
 'use client';
 
 import { ScrollReveal } from './ScrollReveal';
-import { OrganicNatureBg, FloatingLeaf } from './OrganicNatureBg';
+import { OrganicNatureBg } from './OrganicNatureBg';
 
 const TESTIMONIALS = [
   {

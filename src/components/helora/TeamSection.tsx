@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollReveal } from './ScrollReveal';
-import { OrganicNatureBg, FloatingLeaf, OrganicBranch } from './OrganicNatureBg';
+import { OrganicNatureBg } from './OrganicNatureBg';
 
 interface Professional {
   id: string;
