@@ -383,3 +383,22 @@ Stage Summary:
 - Secondary fix: All API routes now log actual errors to console instead of swallowing them
 - db.ts now validates Turso connection with `SELECT 1` and provides actionable error messages
 - Committed and pushed to main (a87a7ef)
+---
+Task ID: minimalist-hero-redesign
+Agent: main
+Task: Redesign hero section to be minimalist, following current design best practices
+
+Work Log:
+- Analyzed current hero: 20+ SVG foliage shapes, 6 bokeh divs, 2 floating leaf animations, 2 organic underline paths, 2 wave paths
+- Replaced OrganicNatureBg hero variant: removed ALL SVG shapes, branches, leaf tips, 6 bokeh divs, 2 floating leaf motion.divs
+- New hero bg: dark gradient base + 2 ultra-subtle radial gradients (one large center light pool, one warm sienna edge accent)
+- Removed unused framer-motion import from OrganicNatureBg
+- Redesigned HeroSection: removed decorative underline SVG, simplified wave from 2 paths to 1 clean curve
+- Vertically centered content (items-center), reduced max-w from 3xl to 2xl for tighter type hierarchy
+- Cleaned dead FloatingLeaf/OrganicBranch imports from Services, Team, Testimonials sections
+- Verified: lint clean, dev server compiles and serves 200 for all routes
+
+Stage Summary:
+- Net -162 lines of code (73% reduction in hero visual code)
+- No SVG shapes in hero anymore — just gradient + 2 radial light accents
+- Pushed to main (6e776e6)
