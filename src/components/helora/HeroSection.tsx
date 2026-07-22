@@ -8,15 +8,15 @@ import { useAppStore } from '@/stores/helora-store';
  * LIQUID MOUSE-REACTIVE HERO BACKGROUND
  * ==========================================================================
  *
- * Single useEffect drives 3 gradient blobs via rAF.
- * Ambient sine drift is ALWAYS active and clearly visible (~8-12 s cycles).
- * Mouse movement adds directional pull that fades over 2.5 s.
+ * Physics:
+ *   - 3 gradient blobs follow mouse via SPRING physics (not lerp).
+ *     Spring → overshoot + damped oscillation = liquid surface feel.
+ *   - Ambient sine drift always active (organic motion without mouse).
+ *   - Mouse movement spawns CONCENTRIC RIPPLE RINGS that expand
+ *     outward from the cursor, like dropping a stone in water.
  *
- * Blob A: deep green,  largest  — slow, background
- * Blob B: sage green,  medium   — mid layer
- * Blob C: warm sienna, smallest — fast accent
- *
- * All maths in viewport-fraction units. No filter:blur().
+ * Performance: transform-only rAF for blobs. CSS animations for ripples.
+ * No filter:blur().
  * ========================================================================== */
 
 export function HeroSection() {
@@ -26,35 +26,66 @@ export function HeroSection() {
   const blob1 = useRef<HTMLDivElement>(null);
   const blob2 = useRef<HTMLDivElement>(null);
 
-  /* ------------------------------------------------------------------
-   * Single effect: animation loop + mouse tracking + lifecycle
-   * ---------------------------------------------------------------- */
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
 
     const refs = [blob0, blob1, blob2] as const;
 
-    /* State — all mutable, read each frame */
+    /* ── State ── */
     const mx = { v: 0 };
     const my = { v: 0 };
     const lastMove = { v: 0 };
-    const pos: [number, number][] = [[0, 0], [0, 0], [0, 0]];
     let phase = 0;
     let rafId = 0;
 
-    /* Per-blob config: [lerp, mouseRange, offsetX, offsetY, driftAmplitude] */
-    const cfg = [
-      [0.04,  0.25, -0.04, -0.03, 0.09],  // A: large, slow
-      [0.06,  0.35,  0.05,  0.03, 0.12],  // B: medium
-      [0.08,  0.45, -0.02,  0.04, 0.15],  // C: small, fast
-    ] as const;
+    /* Spring state per blob: position + velocity */
+    const pos: [number, number][] = [[0, 0], [0, 0], [0, 0]];
+    const vel: [number, number][] = [[0, 0], [0, 0], [0, 0]];
 
+    /* Per-blob: [stiffness, mouseRange, offsetX, offsetY, driftAmplitude] */
+    const cfg = [
+      [0.012, 0.22, -0.04, -0.03, 0.07],
+      [0.018, 0.30,  0.05,  0.03, 0.09],
+      [0.024, 0.40, -0.02,  0.04, 0.12],
+    ] as const;
+    const DAMPING = 0.935;
+
+    /* ── Ripple spawning ── */
+    let lastRipple = 0;
+    const RIPPLE_INTERVAL = 180; // ms
+    const MAX_RIPPLES = 10;
+
+    function spawnRipple(x: number, y: number) {
+      const now = performance.now();
+      if (now - lastRipple < RIPPLE_INTERVAL) return;
+      lastRipple = now;
+
+      const existing = section.querySelectorAll('.liquid-ripple');
+      if (existing.length >= MAX_RIPPLES) {
+        existing[0].remove();
+      }
+
+      /* 2 concentric rings, staggered */
+      for (let r = 0; r < 2; r++) {
+        const ring = document.createElement('div');
+        ring.className = 'liquid-ripple';
+        ring.style.left = x + 'px';
+        ring.style.top = y + 'px';
+        ring.style.animationDelay = (r * 0.22) + 's';
+        ring.style.width = (r === 0 ? 550 : 400) + 'px';
+        ring.style.height = (r === 0 ? 550 : 400) + 'px';
+        section.appendChild(ring);
+        ring.addEventListener('animationend', () => ring.remove());
+      }
+    }
+
+    /* ── Animation loop ── */
     function tick() {
-      phase += 0.012;
+      phase += 0.01;
 
       const elapsed = performance.now() - lastMove.v;
-      const mw = Math.max(0, 1 - elapsed / 3000); // 3 s fade
+      const mw = Math.max(0, 1 - elapsed / 3000);
 
       const vw = section.clientWidth;
       const vh = section.clientHeight;
@@ -63,9 +94,9 @@ export function HeroSection() {
         const el = refs[i].current;
         if (!el) continue;
 
-        const [lr, mRange, ox, oy, amp] = cfg[i];
+        const [stiffness, mRange, ox, oy, amp] = cfg[i];
 
-        /* Ambient drift — always active, vp-fraction units */
+        /* Ambient drift */
         const dx = (
           Math.sin(phase * (0.8 + i * 0.35) + i * 2.3) * 0.65 +
           Math.sin(phase * 0.5 + i * 4.7) * 0.35
@@ -75,12 +106,18 @@ export function HeroSection() {
           Math.cos(phase * 0.4 + i * 3.5) * 0.35
         ) * amp;
 
-        /* Target = ambient + mouse pull + base offset */
+        /* Target position */
         const tx = dx + mx.v * mRange * mw + ox;
         const ty = dy + my.v * mRange * mw + oy;
 
-        pos[i][0] += (tx - pos[i][0]) * lr;
-        pos[i][1] += (ty - pos[i][1]) * lr;
+        /* Spring physics: F = -kx, with damping */
+        vel[i][0] += (tx - pos[i][0]) * stiffness;
+        vel[i][0] *= DAMPING;
+        pos[i][0] += vel[i][0];
+
+        vel[i][1] += (ty - pos[i][1]) * stiffness;
+        vel[i][1] *= DAMPING;
+        pos[i][1] += vel[i][1];
 
         el.style.transform = `translate(${pos[i][0] * vw}px, ${pos[i][1] * vh}px)`;
       }
@@ -88,7 +125,7 @@ export function HeroSection() {
       rafId = requestAnimationFrame(tick);
     }
 
-    /* Respect prefers-reduced-motion */
+    /* ── Lifecycle ── */
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (!mq.matches) {
       rafId = requestAnimationFrame(tick);
@@ -100,12 +137,14 @@ export function HeroSection() {
     }
     mq.addEventListener('change', onMotionChange);
 
-    /* Mouse tracking */
     function onMouseMove(e: MouseEvent) {
       const r = section.getBoundingClientRect();
-      mx.v = (e.clientX - r.left) / r.width - 0.5;
-      my.v = (e.clientY - r.top) / r.height - 0.5;
+      const x = e.clientX - r.left;
+      const y = e.clientY - r.top;
+      mx.v = x / r.width - 0.5;
+      my.v = y / r.height - 0.5;
       lastMove.v = performance.now();
+      spawnRipple(x, y);
     }
     section.addEventListener('mousemove', onMouseMove, { passive: true });
 
@@ -113,6 +152,7 @@ export function HeroSection() {
       cancelAnimationFrame(rafId);
       mq.removeEventListener('change', onMotionChange);
       section.removeEventListener('mousemove', onMouseMove);
+      section.querySelectorAll('.liquid-ripple').forEach((el) => el.remove());
     };
   }, []);
 
@@ -124,7 +164,7 @@ export function HeroSection() {
     >
       {/* - Liquid Background - */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        {/* Smooth natural base gradient — canopy-to-understory depth */}
+        {/* Smooth natural base gradient */}
         <div
           className="absolute inset-0"
           style={{
@@ -133,7 +173,7 @@ export function HeroSection() {
           }}
         />
 
-        {/* Blob A - large, deep canopy glow, slow drift */}
+        {/* Blob A - deep canopy glow */}
         <div className="absolute inset-0">
           <div
             ref={blob0}
@@ -152,7 +192,7 @@ export function HeroSection() {
           />
         </div>
 
-        {/* Blob B - medium, sage light shaft, medium drift */}
+        {/* Blob B - sage light shaft */}
         <div className="absolute inset-0">
           <div
             ref={blob1}
@@ -171,7 +211,7 @@ export function HeroSection() {
           />
         </div>
 
-        {/* Blob C - small, warm sienna accent, fast drift */}
+        {/* Blob C - warm sienna accent */}
         <div className="absolute inset-0">
           <div
             ref={blob2}
@@ -190,7 +230,7 @@ export function HeroSection() {
           />
         </div>
 
-        {/* Central canopy light + vignette for depth */}
+        {/* Central canopy light + vignette */}
         <div
           className="absolute inset-0"
           style={{

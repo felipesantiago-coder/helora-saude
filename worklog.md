@@ -509,3 +509,32 @@ Stage Summary:
 - Mouse pull up to 230px on Blob C — dramatic liquid feel
 - Single clean useEffect with proper lifecycle management
 - No more subtle/imperceptible effect
+
+---
+Task ID: liquid-hero-wave-physics
+Agent: main
+Task: Replace lerp with spring physics + add concentric ripple rings for true liquid feel
+
+Work Log:
+- Identified that sine+lerp movement looks like gentle floating, NOT liquid waves
+- Real liquid waves: concentric ripples emanate from disturbance point, spring oscillation
+- Added spring physics: F = stiffness * (target - pos), vel *= damping, pos += vel
+  - Creates overshoot + damped oscillation (2-3 bounces) = liquid surface feel
+  - stiffness 0.012-0.024, damping 0.935 per frame
+- Added ripple ring system:
+  - CSS @keyframes liquid-ripple: scale(0)→scale(1) with opacity fade
+  - .liquid-ripple: radial-gradient ring (transparent→green→transparent) creates annulus
+  - On mousemove (throttled 180ms): spawn 2 concentric rings staggered 220ms
+  - Outer ring 550px, inner ring 400px
+  - Max 10 active ripples, oldest removed on overflow
+  - animationend listener removes DOM elements
+  - cubic-bezier(0.22, 0.61, 0.36, 1) for natural deceleration
+- Cleanup: removes all .liquid-ripple elements on unmount
+- globals.css: added @keyframes liquid-ripple + .liquid-ripple class
+
+Stage Summary:
+- Two distinct liquid effects now active:
+  1. Spring-driven blob movement (overshoot + oscillation)
+  2. Concentric ripple rings expanding from cursor position
+- Ripples visually mimic water surface disturbance
+- No filter:blur() used
