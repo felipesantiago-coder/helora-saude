@@ -314,7 +314,10 @@
 @keyframes liquid-ripple {
   0% {
     transform: translate(-50%, -50%) scale(0);
-    opacity: 1;
+    opacity: 0.9;
+  }
+  30% {
+    opacity: 0.6;
   }
   100% {
     transform: translate(-50%, -50%) scale(1);
@@ -324,18 +327,18 @@
 
 .liquid-ripple {
   position: absolute;
-  width: 550px;
-  height: 550px;
+  width: 700px;
+  height: 700px;
   border-radius: 50%;
   pointer-events: none;
   background: radial-gradient(
     circle,
-    transparent 34%,
-    rgba(110, 140, 65, 0.10) 44%,
-    rgba(120, 150, 70, 0.18) 50%,
-    rgba(110, 140, 65, 0.10) 56%,
-    transparent 66%
+    transparent 40%,
+    rgba(110, 140, 65, 0.08) 46%,
+    rgba(120, 150, 70, 0.14) 50%,
+    rgba(110, 140, 65, 0.08) 54%,
+    transparent 60%
   );
-  animation: liquid-ripple 2.2s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  animation: liquid-ripple 4.5s ease-out forwards;
   will-change: transform, opacity;
 }
