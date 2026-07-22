@@ -402,3 +402,23 @@ Stage Summary:
 - Net -162 lines of code (73% reduction in hero visual code)
 - No SVG shapes in hero anymore — just gradient + 2 radial light accents
 - Pushed to main (6e776e6)
+---
+Task ID: mock-data-fallback
+Agent: main
+Task: Add intelligent mock data fallback for services and professionals sections
+
+Work Log:
+- Read current ServicesSection and TeamSection to understand data shapes
+- Read seed data to ensure mock data matches real data exactly
+- Created MOCK_SERVICES constant (3 services matching seed) inside ServicesSection
+- Created MOCK_PROFESSIONALS constant (2 professionals matching seed) inside TeamSection
+- Changed fetch logic: try API → if error or empty → use mock data
+- Mock service cards: disabled buttons (non-interactive), subtle opacity difference
+- Removed error state and empty state from both components (mock guarantees content)
+- Clean lint, successful compilation
+
+Stage Summary:
+- Services and professionals sections now always show content
+- When Turso is configured and seeded, real data takes priority automatically
+- When API fails or DB is empty, mock data provides seamless UX
+- Pushed to main (6e9a4af)
