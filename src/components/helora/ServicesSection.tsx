@@ -15,6 +15,38 @@ interface Service {
   duration: number;
 }
 
+/**
+ * Mock services shown when the API is unavailable or no real data exists.
+ * Content mirrors the seed data so the transition is seamless.
+ */
+const MOCK_SERVICES: Service[] = [
+  {
+    id: '__mock_1',
+    name: 'Primeira sessão de cuidado',
+    price: 180,
+    description: 'Um espaço inicial para se conhecer e entender como posso te acompanhar. Sem pressa, sem compromisso imediato.',
+    duration: 50,
+  },
+  {
+    id: '__mock_2',
+    name: 'Sessão individual',
+    price: 200,
+    description: 'Sessão contínua de cuidado, com foco no seu ritmo e nas suas necessidades.',
+    duration: 60,
+  },
+  {
+    id: '__mock_3',
+    name: 'Sessão de casal',
+    price: 300,
+    description: 'Um espaço compartilhado para reconstruir laços e fortalecer a conexão.',
+    duration: 90,
+  },
+];
+
+function isMockService(service: Service): boolean {
+  return service.id.startsWith('__mock_');
+}
+
 function formatPrice(price: number): string {
   return price.toLocaleString('pt-BR', {
     style: 'currency',
@@ -25,7 +57,7 @@ function formatPrice(price: number): string {
 export function ServicesSection() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [usingMock, setUsingMock] = useState(false);
 
   const setService = useBookingStore((s) => s.setService);
   const setView = useAppStore((s) => s.setView);
@@ -38,32 +70,37 @@ export function ServicesSection() {
         const res = await fetch('/api/services');
         if (!res.ok) throw new Error();
         const data: Service[] = await res.json();
-        if (!cancelled) {
+        if (cancelled) return;
+
+        if (data.length > 0) {
           setServices(data);
-          setLoading(false);
+          setUsingMock(false);
+        } else {
+          setServices(MOCK_SERVICES);
+          setUsingMock(true);
         }
       } catch {
         if (!cancelled) {
-          setError(true);
-          setLoading(false);
+          setServices(MOCK_SERVICES);
+          setUsingMock(true);
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
     fetchServices();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   function handleServiceClick(service: Service) {
+    if (isMockService(service)) return;
     setService(service.id, service.name, service.price);
     setView('booking');
   }
 
   return (
     <section id="servicos" className="bg-helora-antique-white py-12 md:py-24 relative overflow-hidden">
-      {/* Forest layer: Understory — deeper understory with light rays */}
       <OrganicNatureBg variant="understory" />
 
       <div className="max-w-6xl mx-auto px-4 relative z-10">
@@ -92,68 +129,58 @@ export function ServicesSection() {
           </div>
         )}
 
-        {/* Error state */}
-        {error && !loading && (
-          <div className="text-center py-16">
-            <p className="font-sans text-helora-tan text-lg">
-              Algo deu errado. Vamos tentar juntos novamente?
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 font-sans text-sm font-medium text-helora-sage hover:text-helora-dark-green underline underline-offset-4 transition-colors duration-200 focus:outline-none"
-            >
-              Recarregar página
-            </button>
-          </div>
-        )}
-
         {/* Service cards */}
-        {!loading && !error && services.length > 0 && (
+        {!loading && services.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.map((service, index) => (
-              <ScrollReveal key={service.id} delay={index * 0.1}>
-                <button
-                  onClick={() => handleServiceClick(service)}
-                  className="helora-card text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 cursor-pointer group w-full active:scale-[0.98] transition-transform relative overflow-hidden"
-                >
-                  {/* Organic top accent — leaf-like curve instead of straight line */}
-                  <div className="absolute top-0 left-0 right-0 h-[3px] overflow-hidden" aria-hidden="true">
-                    <svg width="100%" height="3" viewBox="0 0 400 3" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M0 1.5 Q100 0, 200 2 Q300 3, 400 1" stroke="#777F5C" strokeWidth="3" fill="none" strokeLinecap="round" />
-                    </svg>
-                  </div>
+            {services.map((service, index) => {
+              const mock = isMockService(service);
+              return (
+                <ScrollReveal key={service.id} delay={index * 0.1}>
+                  <button
+                    onClick={() => handleServiceClick(service)}
+                    disabled={mock}
+                    className={
+                      'helora-card text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50 group w-full transition-transform relative overflow-hidden'
+                      + (mock
+                        ? ' cursor-default opacity-90'
+                        : ' cursor-pointer active:scale-[0.98] hover:shadow-organic-lg')
+                    }
+                    aria-label={mock ? service.name : `Agendar ${service.name}`}
+                  >
+                    <div className="absolute top-0 left-0 right-0 h-[3px] overflow-hidden" aria-hidden="true">
+                      <svg width="100%" height="3" viewBox="0 0 400 3" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0 1.5 Q100 0, 200 2 Q300 3, 400 1" stroke="#777F5C" strokeWidth="3" fill="none" strokeLinecap="round" />
+                      </svg>
+                    </div>
 
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <h3 className="font-serif font-normal text-xl md:text-[22px] text-helora-dark-green tracking-tight">
-                      {service.name}
-                    </h3>
-                    <Leaf
-                      size={18}
-                      className="text-helora-light-gray mt-1 shrink-0 group-hover:text-helora-sage transition-colors duration-300"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <p className="font-sans text-[15px] text-helora-tan leading-relaxed mb-5">
-                    {service.description}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-helora-sienna shrink-0" aria-hidden="true" />
-                    <span className="font-sans font-semibold text-lg text-helora-sienna">
-                      {formatPrice(service.price)}
-                    </span>
-                  </div>
-                </button>
-              </ScrollReveal>
-            ))}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!loading && !error && services.length === 0 && (
-          <div className="text-center py-16">
-            <p className="font-sans text-helora-tan text-lg">
-              Nenhum serviço disponível no momento. Estamos preparando tudo com carinho para você.
-            </p>
+                    <div className="flex items-start justify-between gap-3 mb-4">
+                      <h3 className="font-serif font-normal text-xl md:text-[22px] text-helora-dark-green tracking-tight">
+                        {service.name}
+                      </h3>
+                      <Leaf
+                        size={18}
+                        className={
+                          'mt-1 shrink-0 transition-colors duration-300'
+                          + (mock
+                            ? ' text-helora-sage/30'
+                            : ' text-helora-light-gray group-hover:text-helora-sage')
+                        }
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <p className="font-sans text-[15px] text-helora-tan leading-relaxed mb-5">
+                      {service.description}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-helora-sienna shrink-0" aria-hidden="true" />
+                      <span className="font-sans font-semibold text-lg text-helora-sienna">
+                        {formatPrice(service.price)}
+                      </span>
+                    </div>
+                  </button>
+                </ScrollReveal>
+              );
+            })}
           </div>
         )}
       </div>

@@ -13,6 +13,25 @@ interface Professional {
   bio: string | null;
 }
 
+/**
+ * Mock professionals shown when the API is unavailable or no real data exists.
+ * Content mirrors the seed data so the transition is seamless.
+ */
+const MOCK_PROFESSIONALS: Professional[] = [
+  {
+    id: '__mock_m1',
+    name: 'Dra. Marina Lopes',
+    specialty: 'Psicologia Clínica',
+    bio: 'Acolho você com escuta sensível e presença genuína. Especialista em psicoterapia integrativa.',
+  },
+  {
+    id: '__mock_m2',
+    name: 'Dr. André Bastos',
+    specialty: 'Psicoterapia Corporal',
+    bio: 'Trabalho a conexão entre corpo e emoção. Cada sessão é um espaço seguro para se reconectar consigo.',
+  },
+];
+
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) {
@@ -24,7 +43,6 @@ function getInitials(name: string): string {
 export function TeamSection() {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,27 +52,28 @@ export function TeamSection() {
         const res = await fetch('/api/professionals');
         if (!res.ok) throw new Error();
         const data: Professional[] = await res.json();
-        if (!cancelled) {
+        if (cancelled) return;
+
+        if (data.length > 0) {
           setProfessionals(data);
-          setLoading(false);
+        } else {
+          setProfessionals(MOCK_PROFESSIONALS);
         }
       } catch {
         if (!cancelled) {
-          setError(true);
-          setLoading(false);
+          setProfessionals(MOCK_PROFESSIONALS);
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
     fetchProfessionals();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   return (
     <section id="equipe" className="bg-helora-white py-12 md:py-24 relative overflow-hidden">
-      {/* Forest layer: Forest Floor — horizontal scattered shapes, earth tones emerging */}
       <OrganicNatureBg variant="forest-floor" />
 
       <div className="max-w-6xl mx-auto px-4 relative z-10">
@@ -88,35 +107,18 @@ export function TeamSection() {
           </div>
         )}
 
-        {/* Error state */}
-        {error && !loading && (
-          <div className="text-center py-16">
-            <p className="font-sans text-helora-tan text-lg">
-              Algo deu errado. Vamos tentar juntos novamente?
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 font-sans text-sm font-medium text-helora-sage hover:text-helora-dark-green underline underline-offset-4 transition-colors duration-200 focus:outline-none"
-            >
-              Recarregar página
-            </button>
-          </div>
-        )}
-
         {/* Professional cards */}
-        {!loading && !error && professionals.length > 0 && (
+        {!loading && professionals.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl">
             {professionals.map((person, index) => (
               <ScrollReveal key={person.id} delay={index * 0.12}>
                 <div className="helora-card flex flex-col hover:shadow-organic-lg transition-shadow duration-300 relative overflow-hidden">
-                  {/* Organic left accent — leaf-like SVG curve */}
                   <div className="absolute left-0 top-0 bottom-0 w-[3px]" aria-hidden="true">
                     <svg width="3" height="100%" viewBox="0 0 3 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M1.5 0 Q0 50, 2.5 100 Q3 150, 1.5 200" stroke="#777F5C" strokeWidth="3" fill="none" strokeLinecap="round" />
                     </svg>
                   </div>
 
-                  {/* Avatar with organic shape */}
                   <div className="flex items-center gap-4 mb-5">
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-helora-sage/20 to-helora-sage/10 flex items-center justify-center shrink-0 border border-helora-sage/10">
                       <span className="font-serif text-lg text-helora-sage font-normal">
@@ -148,7 +150,6 @@ export function TeamSection() {
                     </p>
                   )}
 
-                  {/* Subtle organic corner accent */}
                   <div className="absolute bottom-0 right-0 pointer-events-none opacity-[0.04]" aria-hidden="true">
                     <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M80 80 Q50 70, 40 40 Q35 20, 50 5 Q65 15, 70 40 Q75 60, 80 80Z" fill="#777F5C" />
@@ -157,15 +158,6 @@ export function TeamSection() {
                 </div>
               </ScrollReveal>
             ))}
-          </div>
-        )}
-
-        {/* Empty state */}
-        {!loading && !error && professionals.length === 0 && (
-          <div className="text-center py-16">
-            <p className="font-sans text-helora-tan text-lg">
-              Nossa equipe está se formando com carinho. Em breve você conhecerá quem vai te acompanhar.
-            </p>
           </div>
         )}
       </div>
