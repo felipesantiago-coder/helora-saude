@@ -1,22 +1,204 @@
 'use client';
 
+import { useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/helora-store';
-import { OrganicNatureBg } from './OrganicNatureBg';
+
+/* ==========================================================================
+ * LIQUID MOUSE-REACTIVE HERO BACKGROUND
+ * ==========================================================================
+ *
+ * 3 large gradient blobs follow the mouse at different speeds via rAF,
+ * creating a parallax depth effect that feels like a liquid surface.
+ *
+ *   Blob A (lerp 0.015): deep green, largest  - slow, background
+ *   Blob B (lerp 0.03):  sage green, medium   - mid layer
+ *   Blob C (lerp 0.05):  warm sienna, smallest - fast accent
+ *
+ * When idle >3 s, ambient sine drift takes over.
+ * On mobile (no mouse), ambient drift plays continuously.
+ *
+ * Performance: transform-only via rAF. No filter:blur().
+ * ========================================================================== */
+
+interface BlobCfg {
+  lerp: number;
+  range: number;
+  offX: number;
+  offY: number;
+}
+
+const BLOBS: [BlobCfg, BlobCfg, BlobCfg] = [
+  { lerp: 0.015, range: 0.12, offX: -0.05, offY: -0.08 },
+  { lerp: 0.03,  range: 0.18, offX:  0.08, offY:  0.04 },
+  { lerp: 0.05,  range: 0.22, offX: -0.03, offY:  0.06 },
+];
+
+function useLiquidBlobs(containerRef: React.RefObject<HTMLElement | null>) {
+  const refs = useRef<(HTMLDivElement | null)[]>([]);
+  const st = useRef({
+    mx: 0, my: 0,
+    pos: [[0, 0], [0, 0], [0, 0]] as [number, number][],
+    phase: 0,
+    raf: 0,
+    hasMouse: false,
+    lastMove: 0,
+  });
+
+  const tick = useCallback(() => {
+    const s = st.current;
+    const el = containerRef.current;
+    if (!el) return;
+
+    s.phase += 0.004;
+    const elapsed = performance.now() - s.lastMove;
+    const mW = s.hasMouse ? Math.max(0, 1 - elapsed / 3000) : 0;
+    const vw = el.clientWidth;
+    const vh = el.clientHeight;
+
+    for (let i = 0; i < 3; i++) {
+      const c = BLOBS[i];
+      const blob = refs.current[i];
+      if (!blob) continue;
+
+      const aX = Math.sin(s.phase * (0.7 + i * 0.3) + i * 2.1) * 20
+               + Math.sin(s.phase * 0.4 + i * 4.3) * 10;
+      const aY = Math.cos(s.phase * (0.5 + i * 0.25) + i * 1.7) * 15
+               + Math.cos(s.phase * 0.35 + i * 3.1) * 8;
+
+      const tx = s.mx * c.range + c.offX + aX * mW;
+      const ty = s.my * c.range + c.offY + aY * mW;
+
+      s.pos[i][0] += (tx - s.pos[i][0]) * c.lerp;
+      s.pos[i][1] += (ty - s.pos[i][1]) * c.lerp;
+
+      blob.style.transform = `translate(${s.pos[i][0] * vw}px, ${s.pos[i][1] * vh}px)`;
+    }
+
+    s.raf = requestAnimationFrame(tick);
+  }, [containerRef]);
+
+  /* Start / stop animation */
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (!mq.matches) st.current.raf = requestAnimationFrame(tick);
+
+    function onChange(m: MediaQueryListEvent) {
+      if (m.matches) cancelAnimationFrame(st.current.raf);
+      else st.current.raf = requestAnimationFrame(tick);
+    }
+    mq.addEventListener('change', onChange);
+    return () => {
+      cancelAnimationFrame(st.current.raf);
+      mq.removeEventListener('change', onChange);
+    };
+  }, [tick]);
+
+  /* Mouse tracking */
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    function onMove(e: MouseEvent) {
+      const r = el.getBoundingClientRect();
+      st.current.mx = (e.clientX - r.left) / r.width - 0.5;
+      st.current.my = (e.clientY - r.top) / r.height - 0.5;
+      st.current.hasMouse = true;
+      st.current.lastMove = performance.now();
+    }
+
+    el.addEventListener('mousemove', onMove, { passive: true });
+    return () => el.removeEventListener('mousemove', onMove);
+  }, [containerRef]);
+
+  return refs;
+}
 
 export function HeroSection() {
   const setView = useAppStore((s) => s.setView);
+  const sectionRef = useRef<HTMLElement>(null);
+  const blobRefs = useLiquidBlobs(sectionRef);
 
   return (
     <section
+      ref={sectionRef}
       id="hero"
       className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden"
     >
-      <OrganicNatureBg variant="hero" />
+      {/* - Liquid Background - */
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        {/* Smooth base gradient - brand greens */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1c2a06] via-[#283106] to-[#2f3d12]" />
 
-      {/* Content — vertically centered */}
+        {/* Blob A - large, deep green, slow follow */}
+        <div className="absolute inset-0">
+          <div
+            ref={(el) => { blobRefs.current[0] = el; }}
+            className="absolute will-change-transform"
+            style={{
+              top: '15%',
+              left: '25%',
+              width: '70vw',
+              height: '60vh',
+              maxWidth: 750,
+              maxHeight: 550,
+              borderRadius: '50%',
+              background:
+                'radial-gradient(ellipse at 50% 50%, rgba(60,82,28,0.18) 0%, rgba(50,70,22,0.08) 40%, transparent 70%)',
+            }}
+          />
+        </div>
+
+        {/* Blob B - medium, sage-tinted, medium follow */}
+        <div className="absolute inset-0">
+          <div
+            ref={(el) => { blobRefs.current[1] = el; }}
+            className="absolute will-change-transform"
+            style={{
+              top: '30%',
+              left: '40%',
+              width: '55vw',
+              height: '50vh',
+              maxWidth: 560,
+              maxHeight: 420,
+              borderRadius: '50%',
+              background:
+                'radial-gradient(ellipse at 50% 50%, rgba(90,105,55,0.14) 0%, rgba(75,90,45,0.06) 42%, transparent 68%)',
+            }}
+          />
+        </div>
+
+        {/* Blob C - small, warm sienna accent, fast follow */}
+        <div className="absolute inset-0">
+          <div
+            ref={(el) => { blobRefs.current[2] = el; }}
+            className="absolute will-change-transform"
+            style={{
+              bottom: '20%',
+              right: '15%',
+              width: '40vw',
+              height: '40vh',
+              maxWidth: 380,
+              maxHeight: 340,
+              borderRadius: '50%',
+              background:
+                'radial-gradient(ellipse at 50% 50%, rgba(156,97,70,0.08) 0%, rgba(130,80,55,0.03) 45%, transparent 65%)',
+            }}
+          />
+        </div>
+
+        {/* Subtle vignette for depth */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(15,22,4,0.35) 100%)',
+          }}
+        />
+      </div>
+
+      {/* - Content - */}
       <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
-        {/* Heading */}
         <motion.h1
           className="font-serif font-light text-[1.85rem] sm:text-[2.75rem] md:text-5xl lg:text-6xl text-white tracking-tight text-balance leading-[1.2] mb-6"
           initial={{ opacity: 0, y: 24 }}
@@ -28,7 +210,6 @@ export function HeroSection() {
           <span className="text-helora-gainsboro/75">nossa essência.</span>
         </motion.h1>
 
-        {/* Subtext */}
         <motion.p
           className="font-sans text-helora-gainsboro/60 text-[0.938rem] sm:text-base md:text-[1.063rem] max-w-md mx-auto mb-10 leading-relaxed"
           initial={{ opacity: 0, y: 20 }}
@@ -38,7 +219,6 @@ export function HeroSection() {
           Um espaço de acolhimento onde você pode respirar, ser ouvido e cuidar de si. Sem pressa, sem julgamento.
         </motion.p>
 
-        {/* CTA buttons */}
         <motion.div
           className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
           initial={{ opacity: 0, y: 20 }}
@@ -62,7 +242,7 @@ export function HeroSection() {
         </motion.div>
       </div>
 
-      {/* Bottom transition — single clean curve */}
+      {/* - Bottom transition - */}
       <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] z-10" aria-hidden="true">
         <svg
           viewBox="0 0 1440 60"
