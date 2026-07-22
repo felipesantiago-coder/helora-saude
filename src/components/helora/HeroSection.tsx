@@ -45,16 +45,16 @@ export function HeroSection() {
 
     /* Per-blob config: [lerp, mouseRange, offsetX, offsetY, driftAmplitude] */
     const cfg = [
-      [0.025, 0.18, -0.04, -0.03, 0.06],  // A: large, slow
-      [0.04,  0.25,  0.05,  0.03, 0.08],  // B: medium
-      [0.06,  0.32, -0.02,  0.04, 0.10],  // C: small, fast
+      [0.04,  0.25, -0.04, -0.03, 0.09],  // A: large, slow
+      [0.06,  0.35,  0.05,  0.03, 0.12],  // B: medium
+      [0.08,  0.45, -0.02,  0.04, 0.15],  // C: small, fast
     ] as const;
 
     function tick() {
-      phase += 0.008;
+      phase += 0.012;
 
       const elapsed = performance.now() - lastMove.v;
-      const mw = Math.max(0, 1 - elapsed / 2500); // 2.5 s fade
+      const mw = Math.max(0, 1 - elapsed / 3000); // 3 s fade
 
       const vw = section.clientWidth;
       const vh = section.clientHeight;
@@ -147,7 +147,7 @@ export function HeroSection() {
               maxHeight: 650,
               borderRadius: '50%',
               background:
-                'radial-gradient(ellipse at 50% 45%, rgba(70,95,35,0.30) 0%, rgba(55,75,28,0.14) 40%, transparent 70%)',
+                'radial-gradient(ellipse at 50% 45%, rgba(75,100,38,0.45) 0%, rgba(60,82,30,0.22) 40%, transparent 72%)',
             }}
           />
         </div>
@@ -166,7 +166,7 @@ export function HeroSection() {
               maxHeight: 480,
               borderRadius: '50%',
               background:
-                'radial-gradient(ellipse at 50% 50%, rgba(110,125,70,0.22) 0%, rgba(90,105,55,0.08) 45%, transparent 70%)',
+                'radial-gradient(ellipse at 50% 50%, rgba(115,132,75,0.38) 0%, rgba(95,110,60,0.16) 42%, transparent 72%)',
             }}
           />
         </div>
@@ -185,7 +185,7 @@ export function HeroSection() {
               maxHeight: 400,
               borderRadius: '50%',
               background:
-                'radial-gradient(ellipse at 55% 55%, rgba(156,97,70,0.16) 0%, rgba(140,85,58,0.06) 45%, transparent 68%)',
+                'radial-gradient(ellipse at 55% 55%, rgba(160,100,72,0.30) 0%, rgba(145,88,60,0.12) 42%, transparent 70%)',
             }}
           />
         </div>
@@ -195,8 +195,8 @@ export function HeroSection() {
           className="absolute inset-0"
           style={{
             background: [
-              'radial-gradient(ellipse at 50% 35%, rgba(85,105,50,0.08) 0%, transparent 50%)',
-              'radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(10,16,3,0.35) 100%)',
+              'radial-gradient(ellipse at 50% 35%, rgba(90,110,55,0.12) 0%, transparent 50%)',
+              'radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(10,16,3,0.30) 100%)',
             ].join(', '),
           }}
         />
