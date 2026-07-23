@@ -9,10 +9,14 @@ import { useAppStore } from '@/stores/helora-store';
  * ==========================================================================
  *
  * A real-time water simulation rendered on Canvas using:
- *   1. The discrete WAVE EQUATION on a 256×256 height-field grid.
- *      Neumann (open) boundary conditions let waves exit the grid
- *      smoothly — combined with a render-edge fade + CSS vignette,
- *      the lake appears to extend infinitely beyond the viewport.
+ *   1. The discrete WAVE EQUATION on a 384×384 height-field grid.
+ *      The simulation is LARGER than the visible canvas (256×256) —
+ *      waves propagate out of the viewport into a hidden border region
+ *      and are absorbed there by MUR'S 1ST ORDER ABSORBING BOUNDARY
+ *      CONDITION (a true one-way wave equation, NOT a sponge/damping
+ *      layer).  The border has NO special damping — it is just extra
+ *      lake surface with identical physics, so there is zero visual
+ *      discontinuity at the visible edge.
  *   2. Per-pixel surface-normal estimation (central differences)
  *      fed into BLINN-PHONG shading (diffuse + specular) with a
  *      directional light from the upper-left.
@@ -24,6 +28,7 @@ import { useAppStore } from '@/stores/helora-store';
  * No spontaneous waves — only user interaction generates ripples.
  *
  * No filter:blur().  No DOM ripple elements.  No blobs.
+ * No canvas edge fade — no dark border artifacts.
  * ========================================================================== */
 
 export function HeroSection() {
@@ -36,23 +41,36 @@ export function HeroSection() {
     const section = sectionRef.current;
     if (!canvas || !section) return;
 
-    /* ── Grid (matches visible canvas — no hidden border) ── */
-    const W = 256;
-    const H = 256;
-    canvas.width = W;
-    canvas.height = H;
+    /* ── Grid layout ── */
+    /* The simulation grid is larger than the visible canvas.
+     * Visible area sits in the center; the surrounding hidden border
+     * is just extra lake surface (identical physics, NO damping).
+     * Mur's ABC at the outer edge absorbs outgoing waves — giving
+     * the illusion of an infinite lake beyond the viewport. */
+    const VW = 256; // visible width  (canvas pixels)
+    const VH = 256; // visible height (canvas pixels)
+    const BORDER = 64; // hidden border on each side
+    const SW = VW + 2 * BORDER; // sim grid width  = 384
+    const SH = VH + 2 * BORDER; // sim grid height = 384
+
+    canvas.width = VW;
+    canvas.height = VH;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    /* Two buffers for the wave equation */
-    let curr = new Float32Array(W * H);
-    let prev = new Float32Array(W * H);
+    /* Two buffers for the wave equation (full sim grid) */
+    let curr = new Float32Array(SW * SH);
+    let prev = new Float32Array(SW * SH);
 
     /* Wave equation constants */
     const DAMPING = 0.992;
     const C2 = 0.12; // c² — wave speed squared
+    const C = Math.sqrt(C2); // c ≈ 0.346 cells/step
     const CENTER = 2 - 4 * C2; // = 1.52
+
+    /* Mur's 1st order ABC coefficient: r = (c - 1) / (c + 1) ≈ -0.486 */
+    const MUR_R = (C - 1) / (C + 1);
 
     /* Drop params (click → concentric ripples) */
     const DROP_RADIUS = 14;
@@ -62,25 +80,9 @@ export function HeroSection() {
     const OBJ_THROTTLE = 180; // ms between wake disturbances
     const MIN_MOVE = 5; // min grid-cell movement to trigger wake
 
-    /* Edge fade (render-only — makes waves look like they continue
-     * beyond the viewport, like the lake surface curving away) */
-    const EDGE_FADE = 40; // pixels from edge where fading begins
-
-    /* Render target */
-    const imgData = ctx.createImageData(W, H);
+    /* Render target (visible area only) */
+    const imgData = ctx.createImageData(VW, VH);
     const px = imgData.data;
-
-    /* ── Pre-compute edge fade LUT (one float per row/column) ── */
-    const fadeX = new Float32Array(W);
-    const fadeY = new Float32Array(H);
-    for (let i = 0; i < W; i++) {
-      const d = Math.min(i, W - 1 - i);
-      fadeX[i] = d >= EDGE_FADE ? 1.0 : (d / EDGE_FADE);
-    }
-    for (let i = 0; i < H; i++) {
-      const d = Math.min(i, H - 1 - i);
-      fadeY[i] = d >= EDGE_FADE ? 1.0 : (d / EDGE_FADE);
-    }
 
     /* ── Lighting (pre-computed once) ── */
     const lx = -0.3, ly = -0.5, lz = 1.0;
@@ -101,19 +103,19 @@ export function HeroSection() {
     function addDrop(cx: number, cy: number) {
       const r = DROP_RADIUS;
       const r2 = r * r;
-      const icx = Math.floor(cx);
-      const icy = Math.floor(cy);
+      const icx = Math.floor(cx) + BORDER;
+      const icy = Math.floor(cy) + BORDER;
       for (let dy = -r; dy <= r; dy++) {
         const gy = icy + dy;
-        if (gy < 0 || gy >= H) continue;
+        if (gy < 1 || gy >= SH - 1) continue;
         const dy2 = dy * dy;
         for (let dx = -r; dx <= r; dx++) {
           const gx = icx + dx;
-          if (gx < 0 || gx >= W) continue;
+          if (gx < 1 || gx >= SW - 1) continue;
           const d2 = dx * dx + dy2;
           if (d2 > r2) continue;
           const f = Math.cos((Math.sqrt(d2) / r) * Math.PI * 0.5);
-          curr[gy * W + gx] += DROP_STRENGTH * f * f;
+          curr[gy * SW + gx] += DROP_STRENGTH * f * f;
         }
       }
     }
@@ -126,84 +128,92 @@ export function HeroSection() {
       const perpX = -dirY;
       const perpY = dirX;
       const HALF = 5;
-      const scx = Math.floor(cx);
-      const scy = Math.floor(cy);
+      const scx = Math.floor(cx) + BORDER;
+      const scy = Math.floor(cy) + BORDER;
 
       for (let t = -HALF; t <= HALF; t++) {
         const gx = Math.floor(scx + perpX * t);
         const gy = Math.floor(scy + perpY * t);
-        if (gx < 1 || gx >= W - 1 || gy < 1 || gy >= H - 1) continue;
+        if (gx < 1 || gx >= SW - 1 || gy < 1 || gy >= SH - 1) continue;
         const f = Math.cos((t / HALF) * Math.PI * 0.5);
-        curr[gy * W + gx] += 0.15 * f * f;
+        curr[gy * SW + gx] += 0.15 * f * f;
       }
     }
 
-    /* ── Wave equation propagation — Neumann (open) boundary conditions ── */
-    // All cells are updated, including edges.  For out-of-bounds
-    // neighbours we use the cell's own value (zero-gradient), which
-    // lets waves exit the grid smoothly instead of reflecting.
+    /* ── Wave equation propagation ── */
+    // 1. Normal wave equation for interior cells (1 to SW-2, 1 to SH-2)
+    // 2. Mur's 1st order ABC at the four edges (true absorption, no sponge)
+    // 3. NO damping in the border zone — identical physics everywhere
     function propagate() {
-      for (let y = 0; y < H; y++) {
-        const yw = y * W;
-        const hasTop = y > 0;
-        const hasBot = y < H - 1;
-        const topOff = hasTop ? -W : 0;
-        const botOff = hasBot ? W : 0;
-
-        for (let x = 0; x < W; x++) {
+      /* Interior cells */
+      for (let y = 1; y < SH - 1; y++) {
+        const yw = y * SW;
+        for (let x = 1; x < SW - 1; x++) {
           const i = yw + x;
-          const hasLeft = x > 0;
-          const hasRight = x < W - 1;
           prev[i] =
             (CENTER * curr[i] +
               C2 *
-                (curr[hasLeft ? i - 1 : i] +
-                  curr[hasRight ? i + 1 : i] +
-                  curr[i + topOff] +
-                  curr[i + botOff]) -
+                (curr[i - 1] +
+                  curr[i + 1] +
+                  curr[i - SW] +
+                  curr[i + SW]) -
               prev[i]) *
             DAMPING;
         }
       }
+
+      /* Mur's 1st order ABC at edges */
+      const r = MUR_R;
+
+      // Left (x=0) & Right (x=SW-1) — skip corners (y=0 and y=SH-1)
+      for (let y = 1; y < SH - 1; y++) {
+        const yw = y * SW;
+        // Left:  u_new[0,y] = u_old[1,y] + r * (u_new[1,y] - u_old[0,y])
+        prev[yw] =
+          (curr[yw + 1] + r * (prev[yw + 1] - curr[yw])) * DAMPING;
+        // Right: u_new[W-1,y] = u_old[W-2,y] + r * (u_new[W-2,y] - u_old[W-1,y])
+        prev[yw + SW - 1] =
+          (curr[yw + SW - 2] +
+            r * (prev[yw + SW - 2] - curr[yw + SW - 1])) *
+          DAMPING;
+      }
+
+      // Top (y=0) & Bottom (y=SH-1) — full width including corners
+      for (let x = 0; x < SW; x++) {
+        // Top:    u_new[x,0] = u_old[x,1] + r * (u_new[x,1] - u_old[x,0])
+        prev[x] = (curr[SW + x] + r * (prev[SW + x] - curr[x])) * DAMPING;
+        // Bottom: u_new[x,H-1] = u_old[x,H-2] + r * (u_new[x,H-2] - u_old[x,H-1])
+        prev[(SH - 1) * SW + x] =
+          (curr[(SH - 2) * SW + x] +
+            r * (prev[(SH - 2) * SW + x] - curr[(SH - 1) * SW + x])) *
+          DAMPING;
+      }
+
+      /* Swap buffers */
       const tmp = curr;
       curr = prev;
       prev = tmp;
     }
 
-    /* ── 3D render: Blinn-Phong shading with edge fade ── */
+    /* ── 3D render: Blinn-Phong shading (visible region only) ── */
     function render() {
-      for (let vy = 0; vy < H; vy++) {
-        const yw = vy * W;
-        const fy = fadeY[vy];
+      for (let vy = 0; vy < VH; vy++) {
+        const sy = vy + BORDER; // sim Y (offset by BORDER)
+        const syw = sy * SW;
         /* Base gradient — dark forest green top → bottom */
-        const t = vy / H;
+        const t = vy / VH;
         const bR = 20 + t * 20; // 20 → 40
         const bG = 30 + t * 19; // 30 → 49
         const bB = 3 + t * 4; // 3 → 7
 
-        for (let vx = 0; vx < W; vx++) {
-          const pi = (yw + vx) << 2;
-          const fx = fadeX[vx];
-          const sf = fx * fy; // combined edge fade (0 at corners, 1 at center)
+        for (let vx = 0; vx < VW; vx++) {
+          const sx = vx + BORDER; // sim X (offset by BORDER)
+          const pi = (vy * VW + vx) << 2;
+          const si = syw + sx;
 
-          // Near the edge, skip wave computation entirely — pure base gradient
-          if (sf < 0.01) {
-            px[pi] = bR;
-            px[pi + 1] = bG;
-            px[pi + 2] = bB;
-            px[pi + 3] = 255;
-            continue;
-          }
-
-          const si = yw + vx;
-
-          /* Surface normal via central differences (Neumann-safe) */
-          const dhdx =
-            (curr[vx > 0 ? si - 1 : si] - curr[vx < W - 1 ? si + 1 : si]) *
-            0.5 * sf;
-          const dhdy =
-            (curr[vy > 0 ? si - W : si] - curr[vy < H - 1 ? si + W : si]) *
-            0.5 * sf;
+          /* Surface normal via central differences */
+          const dhdx = (curr[si - 1] - curr[si + 1]) * 0.5;
+          const dhdy = (curr[si - SW] - curr[si + SW]) * 0.5;
           const invN = 1.0 / Math.sqrt(dhdx * dhdx + dhdy * dhdy + 1.0);
           const nx = -dhdx * invN;
           const ny = -dhdy * invN;
@@ -262,12 +272,12 @@ export function HeroSection() {
     mq.addEventListener('change', onMotionChange);
 
     /* ── Input helpers ── */
-    // Convert client coords to grid coords (0..W, 0..H)
+    // Convert client coords to visible-grid coords (0..VW, 0..VH)
     function toGrid(clientX: number, clientY: number): [number, number] {
       const r = section.getBoundingClientRect();
       return [
-        ((clientX - r.left) / r.width) * W,
-        ((clientY - r.top) / r.height) * H,
+        ((clientX - r.left) / r.width) * VW,
+        ((clientY - r.top) / r.height) * VH,
       ];
     }
 
