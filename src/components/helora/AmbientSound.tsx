@@ -4,46 +4,62 @@ import { useState, useRef, useCallback } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 
 /* ==========================================================================
- * EVIDENCE-BASED AMBIENT SOUND — HYBRID ARCHITECTURE
+ * EVIDENCE-BASED AMBIENT SOUND — PHASE-ALIGNED PERIODIC LOOP
  * ==========================================================================
  *
- * UNDETECTABLE LOOP via a hybrid continuous + looped approach:
+ * ROOT CAUSE OF PREVIOUS "ESTAMPIDO":
+ *   Oscillator frequencies (e.g. C3 = 130.81 Hz) did not complete an
+ *   integer number of cycles in 48 s: 130.81 × 48 = 6278.88 cycles.
+ *   The 0.88-cycle phase mismatch created an inaudible frequency error
+ *   but a VISIBLE waveform discontinuity at the loop point — a pop.
+ *   No crossfade can fix this because the discontinuity is in the DERIVATIVE
+ *   of the waveform, not just its value.
  *
- * CONTINUOUS LAYERS (oscillators, never repeat):
- *   • Water ambience: 3 brown-noise buffers at COPRIME lengths
- *     (5 s + 7 s + 9 s). Their combined pattern repeats only
- *     every LCM(5,7,9) = 315 seconds (~5 min) — effectively
- *     non-repeating for any realistic listening session.
- *   • Sub-bass C2 (65.41 Hz) — pure continuous sine.
- *   • 60 BPM pulse LFO (1 Hz) modulating sub-bass gain.
+ * FIX — Phase-aligned periodic generation:
+ *   1. Every frequency is snapped to the nearest multiple of 1/LOOP_S Hz.
+ *      Max tuning error: < 0.01 Hz (completely inaudible).
+ *   2. Phase is computed DIRECTLY (2π·f·i/sr) instead of accumulated
+ *      (p += inc). This eliminates floating-point drift over 2M+ samples.
+ *   3. Result: sample[0] == sample[N] in BOTH value AND slope.
+ *      The loop is mathematically seamless. No crossfade needed.
  *
- * LOOPED MUSICAL BUFFER (48 s, only pad + bells):
- *   • Chord progression: Cmaj → Am → Dsus4 → Em → G → Am7 → Cmaj
- *     with 3-second smoothstep crossfades.
- *   • 16 bell-like melodic fragments (pentatonic, varied).
- *   • 6-second Hann crossfade at loop boundary.
- *   • Stereo with per-channel micro-detune.
+ * LAYERS:
+ *   CONTINUOUS (oscillators, never loop):
+ *     • Water: 3 brown-noise buffers at coprime lengths (5+7+9 s)
+ *       with 1 s Hann crossfade + DC block. Combined period = 315 s.
+ *     • Sub-bass C2 (65.41 Hz) + 60 BPM pulse LFO.
  *
- * WHY THIS IS UNDETECTABLE:
- *   The continuous water + sub-bass NEVER loop. They provide an
- *   ever-evolving foundation that masks any subtle artifact from
- *   the 48 s musical loop. The ear cannot isolate the looped
- *   layer from the continuous layers.
+ *   LOOPED MUSIC (48 s, inherently periodic):
+ *     • 6 chords with smoothstep crossfades.
+ *     • 13 bell-like pentatonic fragments (exponential decay).
+ *     • Stereo via phase offset (π/5) — preserves periodicity.
  *
  * Master volume: 0.30.  1.5 s fade-in / fade-out.
  * ========================================================================== */
 
 const FADE_DURATION = 1.5;
 const MASTER_VOLUME = 0.30;
-const MUSIC_LOOP_S = 48;
-const CROSSFADE_S = 6;
+const LOOP_S = 48;
+const BROWN_FADE_S = 1.0; // 1 s Hann crossfade for brown noise
 
-/* ── Pentatonic frequencies (C major pentatonic) ── */
+/* ── Snap frequency to exact multiple of 1/LOOP_S Hz ──
+ * Example: snap(130.81) = round(130.81×48)/48 = 6279/48 = 130.8125 Hz
+ * Difference from equal temperament: 0.0025 Hz — far below JND (~0.5 Hz). */
+function snap(f: number): number {
+  return Math.round(f * LOOP_S) / LOOP_S;
+}
+
+/* ── Pentatonic frequencies, phase-aligned to 48 s loop ── */
 const F = {
-  C3: 130.81, D3: 146.83, E3: 164.81, G3: 196.00, A3: 220.00,
-  C4: 261.63, D4: 293.66, E4: 329.63, G4: 392.00, A4: 440.00,
-  C5: 523.25,
+  A2: snap(110.0),
+  C3: snap(130.81), D3: snap(146.83), E3: snap(164.81),
+  G2: snap(98.0),  G3: snap(196.0),  A3: snap(220.0),
+  C4: snap(261.63), D4: snap(293.66), E4: snap(329.63),
+  G4: snap(392.0),  A4: snap(440.0),  C5: snap(523.25),
 };
+
+/* Stereo phase offset — replaces detune to preserve periodicity */
+const STEREO_PHASE = Math.PI / 5; // ~36°
 
 /* ════════════════════════════════════════════════════════════════════════
  * 1. BROWN NOISE BUFFER (for water ambience — continuous layer)
@@ -58,18 +74,26 @@ function createBrownNoise(ctx: AudioContext, dur: number): AudioBuffer {
     last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
     d[i] = last * 3.5;
   }
-  /* 30 ms cross-fade at loop boundaries */
-  const fade = Math.floor(sr * 0.03);
+
+  /* DC block: subtract mean to prevent low-freq thump at loop boundary */
+  let sum = 0;
+  for (let i = 0; i < len; i++) sum += d[i];
+  const mean = sum / len;
+  for (let i = 0; i < len; i++) d[i] -= mean;
+
+  /* 1 s Hann cross-fade at loop boundaries (handles brown noise's
+   * strong low-frequency content — 30 ms was insufficient) */
+  const fade = Math.floor(sr * BROWN_FADE_S);
   for (let i = 0; i < fade; i++) {
-    const t = i / fade;
-    d[i] *= t;
-    d[len - 1 - i] *= t;
+    const w = 0.5 * (1 - Math.cos(Math.PI * i / fade));
+    d[i] *= w;
+    d[len - 1 - i] *= w;
   }
   return buf;
 }
 
 /* ════════════════════════════════════════════════════════════════════════
- * 2. MUSICAL BUFFER GENERATION (pad chords + bell melodies)
+ * 2. MUSIC BUFFER (pad chords + bell melodies — phase-aligned loop)
  * ════════════════════════════════════════════════════════════════════════ */
 
 function smoothstep(t: number, a: number, b: number): number {
@@ -79,116 +103,107 @@ function smoothstep(t: number, a: number, b: number): number {
   return x * x * (3 - 2 * x);
 }
 
-function hann(t: number): number {
-  return 0.5 * (1 - Math.cos(Math.PI * t));
-}
-
-/* Chord progression for 48-second loop */
+/* Chord progression — all notes use snapped (phase-aligned) frequencies */
 type Chord = { t0: number; t1: number; notes: number[]; g: number[] };
 
 const CHORDS: Chord[] = [
-  { t0: 0,  t1: 12, notes: [F.C3, F.E3, F.G3],       g: [0.040, 0.032, 0.024] }, // C major
-  { t0: 9,  t1: 21, notes: [110.0, F.C3, F.E3],       g: [0.036, 0.028, 0.023] }, // A minor (A2)
-  { t0: 18, t1: 30, notes: [F.D3, F.G3, F.A3],       g: [0.032, 0.026, 0.020] }, // D sus4
-  { t0: 27, t1: 36, notes: [F.E3, F.G3, F.A3],       g: [0.034, 0.025, 0.019] }, // E minor
-  { t0: 33, t1: 42, notes: [98.0, F.C3, F.D3],       g: [0.030, 0.027, 0.021] }, // G sus4 (G2)
-  { t0: 39, t1: 48, notes: [110.0, F.C3, F.E3, F.G3], g: [0.033, 0.026, 0.021, 0.016] }, // Am7
+  { t0: 0,  t1: 12, notes: [F.C3, F.E3, F.G3],        g: [0.040, 0.032, 0.024] }, // C major
+  { t0: 9,  t1: 21, notes: [F.A2, F.C3, F.E3],        g: [0.036, 0.028, 0.023] }, // A minor
+  { t0: 18, t1: 30, notes: [F.D3, F.G3, F.A3],        g: [0.032, 0.026, 0.020] }, // D sus4
+  { t0: 27, t1: 36, notes: [F.E3, F.G3, F.A3],        g: [0.034, 0.025, 0.019] }, // E minor
+  { t0: 33, t1: 42, notes: [F.G2, F.C3, F.D3],        g: [0.030, 0.027, 0.021] }, // G sus4
+  { t0: 39, t1: 48, notes: [F.A2, F.C3, F.E3, F.G3],  g: [0.033, 0.026, 0.021, 0.016] }, // Am7
 ];
 
-/* Bell-like melodic fragments */
+/* Bell-like melodic fragments — all with phase-aligned frequencies.
+ * Last bell at t=41 with 3s decay → negligible by t=44. Loop point at t=48
+ * is reached with clean pad-only signal fading to zero. */
 type Bell = { t: number; freq: number; vol: number; decay: number };
 
 const BELLS: Bell[] = [
-  // C major
   { t: 2.5,  freq: F.E4, vol: 0.015, decay: 3.5 },
   { t: 6.0,  freq: F.C5, vol: 0.017, decay: 4.0 },
   { t: 9.5,  freq: F.G4, vol: 0.012, decay: 3.0 },
-  // A minor
   { t: 12.0, freq: F.A4, vol: 0.014, decay: 3.5 },
   { t: 16.0, freq: F.E4, vol: 0.016, decay: 4.0 },
-  // D sus4
   { t: 20.0, freq: F.D4, vol: 0.013, decay: 3.0 },
   { t: 23.5, freq: F.A4, vol: 0.015, decay: 3.5 },
   { t: 26.5, freq: F.G4, vol: 0.012, decay: 3.0 },
-  // E minor
   { t: 29.0, freq: F.E4, vol: 0.016, decay: 4.0 },
   { t: 33.0, freq: F.C5, vol: 0.014, decay: 3.5 },
-  // G sus4
   { t: 35.5, freq: F.G4, vol: 0.013, decay: 3.0 },
   { t: 38.5, freq: F.D4, vol: 0.011, decay: 3.0 },
-  // Am7
-  { t: 40.5, freq: F.A4, vol: 0.015, decay: 3.5 },
-  { t: 43.5, freq: F.E4, vol: 0.013, decay: 3.0 },
-  // Crossfade zone (fading out)
-  { t: 46.0, freq: F.C4, vol: 0.009, decay: 3.0 },
+  { t: 41.0, freq: F.A4, vol: 0.013, decay: 3.0 },
+  // No bells after t=41 — keep the loop boundary region clean
 ];
 
 function generateMusicBuffer(ctx: AudioContext): AudioBuffer {
   const sr = ctx.sampleRate;
-  const len = Math.floor(sr * MUSIC_LOOP_S);
+  const len = Math.floor(sr * LOOP_S);
   const buf = ctx.createBuffer(2, len, sr);
   const L = buf.getChannelData(0);
   const R = buf.getChannelData(1);
+  const TAU = 2 * Math.PI;
 
-  /* ── Pad with chord progression ── */
+  /* ── Pad with chord progression ──
+   * KEY: phase is computed DIRECTLY (TAU * freq * i / sr) instead of
+   * accumulated (p += inc). This guarantees zero floating-point drift
+   * and exact periodicity for snapped frequencies. */
   for (const ch of CHORDS) {
     for (let n = 0; n < ch.notes.length; n++) {
       const freq = ch.notes[n];
       const vol = ch.g[n];
-      const incL = (2 * Math.PI * freq) / sr;
-      const incR = (2 * Math.PI * freq * 1.0004) / sr;
       const i0 = Math.floor(ch.t0 * sr);
       const i1 = Math.min(Math.floor(ch.t1 * sr), len);
-      let pL = 0, pR = 0;
 
       for (let i = i0; i < i1; i++) {
         const t = i / sr;
         const env = smoothstep(t, ch.t0, ch.t0 + 3) * (1 - smoothstep(t, ch.t1 - 3, ch.t1));
-        const pulse = 1.0 + 0.06 * Math.sin(2 * Math.PI * t);
+        const pulse = 1.0 + 0.06 * Math.sin(TAU * t); // 1 Hz = 60 BPM
         const a = env * vol * pulse;
 
-        L[i] += (Math.sin(pL) + Math.sin(pL * 2) * 0.10) * a;
-        R[i] += (Math.sin(pR) + Math.sin(pR * 2) * 0.10) * a;
-        pL += incL;
-        pR += incR;
+        /* Direct phase: sin(2π·f·i/sr). At i=0→phase=0, at i=len→2π·N (integer N). */
+        const phaseL = TAU * freq * i / sr;
+        const phaseR = phaseL + STEREO_PHASE;
+
+        /* Fundamental + 2nd harmonic (2× freq is also integer-multiple → periodic) */
+        L[i] += (Math.sin(phaseL) + Math.sin(phaseL * 2) * 0.10) * a;
+        R[i] += (Math.sin(phaseR) + Math.sin(phaseR * 2) * 0.10) * a;
       }
     }
   }
 
-  /* ── Bell-like melodic fragments ── */
+  /* ── Bell-like melodic fragments (direct phase) ──
+   * All bell freqs × 48 = even integers, so the 2.5× overtone also
+   * completes integer cycles → fully periodic. */
   for (const b of BELLS) {
     const bs = Math.floor(b.t * sr);
     const be = Math.min(Math.floor((b.t + b.decay) * sr), len);
-    const inc = (2 * Math.PI * b.freq) / sr;
-    const oInc = (2 * Math.PI * b.freq * 2.5) / sr; // inharmonic overtone
-    let p = 0, oP = 0;
 
     for (let i = bs; i < be; i++) {
       const dt = (i - bs) / sr;
       const env = smoothstep(dt, 0, 0.25) * Math.exp(-dt * 1.3) * b.vol;
-      const s = Math.sin(p) * env;
-      const o = Math.sin(oP) * env * 0.22;
+
+      const phase = TAU * b.freq * i / sr;
+      const oPhase = TAU * b.freq * 2.5 * i / sr; // inharmonic overtone
+
+      const s = Math.sin(phase) * env;
+      const o = Math.sin(oPhase) * env * 0.22;
       L[i] += s * 1.0 + o * 0.5;
       R[i] += s * 0.65 + o * 1.0;
-      p += inc;
-      oP += oInc;
     }
   }
 
-  /* ── Perfect loop crossfade (6-second Hann) ── */
-  const cfLen = Math.floor(sr * CROSSFADE_S);
-  for (let i = 0; i < cfLen; i++) {
-    const w = hann(i / cfLen);
-    const ei = len - cfLen + i;
-    L[ei] = L[ei] * (1 - w) + L[i] * w;
-    R[ei] = R[ei] * (1 - w) + R[i] * w;
-  }
-
-  /* ── Soft clip ── */
+  /* ── Soft clip (applied uniformly — no crossfade region artifacts) ── */
   for (let i = 0; i < len; i++) {
     L[i] = Math.tanh(L[i] * 2.0) / 2.0;
     R[i] = Math.tanh(R[i] * 2.0) / 2.0;
   }
+
+  /* NO CROSSFADE NEEDED — the buffer is mathematically periodic.
+   * At i=0: all envelopes = 0, all phases = 0 → signal = 0.
+   * At i=len-1: all envelopes ≈ 0, all phases ≈ 2π·N → signal ≈ 0.
+   * Both value AND derivative are continuous across the loop point. */
 
   return buf;
 }
@@ -268,7 +283,7 @@ export function AmbientSound() {
     nodes.push(pulseLFO);
 
     /* ══════════════════════════════════════════════════════════════
-     * LOOPED LAYER: Musical pad + bells (48 s buffer)
+     * LOOPED LAYER: Musical pad + bells (48 s, phase-aligned)
      * ══════════════════════════════════════════════════════════════ */
     const musicBuf = generateMusicBuffer(ctx);
     const musicSrc = ctx.createBufferSource();
