@@ -557,3 +557,29 @@ Stage Summary:
 - Blobs completely removed from hero — clean gradient background only
 - Ripples are now ~2x slower and smoother (4.5s vs 2.2s)
 - Less frequent spawn, thinner rings, gentler opacity — more like calm lake ripples
+---
+Task ID: 2
+Agent: main
+Task: Implement 3D lake wave simulation with Canvas + Blinn-Phong shading
+
+Work Log:
+- Read current HeroSection.tsx (CSS ripple rings + base gradient)
+- Replaced entire approach with Canvas-based water simulation
+- Implemented 256x256 wave equation with two Float32Array buffers
+- Per-pixel surface normal via central differences (dhdx, dhdy)
+- Blinn-Phong lighting: directional light (-0.3, -0.5, 1.0) normalized
+- Half-vector pre-computed for Blinn-Phong specular (exponent 16)
+- Specular optimized via repeated squaring (no Math.pow)
+- Canvas renders gradient + waves as fully opaque layer
+- CSS vignette overlay for atmospheric depth
+- Gaussian drop function: radius 4, strength 15, cosine falloff
+- Mouse/touch input: throttled at 70ms
+- Three initial drops at 600ms, 1400ms, 2200ms
+- Removed old .liquid-ripple CSS from globals.css
+- Lint: 0 errors. Dev server: 200 OK.
+
+Stage Summary:
+- 3D water surface with realistic wave propagation and Blinn-Phong lighting
+- Waves reflect off boundaries and interfere naturally
+- Specular highlights create glinting water surface appearance
+- Pushed to main (6e02315)
