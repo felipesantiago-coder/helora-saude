@@ -9,11 +9,10 @@ import { useAppStore } from '@/stores/helora-store';
  * ==========================================================================
  *
  * A real-time water simulation rendered on Canvas using:
- *   1. The discrete WAVE EQUATION on a 384×384 height-field grid.
- *      The simulation is LARGER than the visible canvas (256×256) —
- *      waves propagate out of the viewport into a hidden border region
- *      and are silently absorbed there, creating the illusion of an
- *      infinite lake that extends beyond the screen.
+ *   1. The discrete WAVE EQUATION on a 256×256 height-field grid.
+ *      Neumann (open) boundary conditions let waves exit the grid
+ *      smoothly — combined with a render-edge fade + CSS vignette,
+ *      the lake appears to extend infinitely beyond the viewport.
  *   2. Per-pixel surface-normal estimation (central differences)
  *      fed into BLINN-PHONG shading (diffuse + specular) with a
  *      directional light from the upper-left.
@@ -21,7 +20,7 @@ import { useAppStore } from '@/stores/helora-store';
  *      so the canvas is fully opaque.
  *
  * Mouse click → concentric ripples (gaussian drop).
- * Mouse move → directional canoe wake (asymmetric additive disturbance).
+ * Mouse move → directional canoe wake (gentle perpendicular ridge).
  * No spontaneous waves — only user interaction generates ripples.
  *
  * No filter:blur().  No DOM ripple elements.  No blobs.
@@ -37,29 +36,22 @@ export function HeroSection() {
     const section = sectionRef.current;
     if (!canvas || !section) return;
 
-    /* ── Grid layout ── */
-    /* The simulation grid is larger than the visible canvas.
-     * Visible area sits in the center; the surrounding hidden border
-     * absorbs waves so they appear to continue beyond the viewport. */
-    const VW = 256; // visible width  (canvas pixels)
-    const VH = 256; // visible height (canvas pixels)
-    const BORDER = 64; // hidden border on each side
-    const SW = VW + 2 * BORDER; // sim grid width  = 384
-    const SH = VH + 2 * BORDER; // sim grid height = 384
-
-    canvas.width = VW;
-    canvas.height = VH;
+    /* ── Grid (matches visible canvas — no hidden border) ── */
+    const W = 256;
+    const H = 256;
+    canvas.width = W;
+    canvas.height = H;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    /* Two buffers for the wave equation (full sim grid) */
-    let curr = new Float32Array(SW * SH);
-    let prev = new Float32Array(SW * SH);
+    /* Two buffers for the wave equation */
+    let curr = new Float32Array(W * H);
+    let prev = new Float32Array(W * H);
 
     /* Wave equation constants */
     const DAMPING = 0.992;
-    const C2 = 0.12; // c² — wave speed squared (0.5 = max stable, lower = slower)
+    const C2 = 0.12; // c² — wave speed squared
     const CENTER = 2 - 4 * C2; // = 1.52
 
     /* Drop params (click → concentric ripples) */
@@ -67,12 +59,28 @@ export function HeroSection() {
     const DROP_STRENGTH = 8;
 
     /* Wake params (mouse move → canoe cutting water) */
-    const OBJ_THROTTLE = 120; // ms between wake disturbances
-    const MIN_MOVE = 3.5; // min grid-cell movement to trigger wake
+    const OBJ_THROTTLE = 180; // ms between wake disturbances
+    const MIN_MOVE = 5; // min grid-cell movement to trigger wake
 
-    /* Render target (visible area only) */
-    const imgData = ctx.createImageData(VW, VH);
+    /* Edge fade (render-only — makes waves look like they continue
+     * beyond the viewport, like the lake surface curving away) */
+    const EDGE_FADE = 40; // pixels from edge where fading begins
+
+    /* Render target */
+    const imgData = ctx.createImageData(W, H);
     const px = imgData.data;
+
+    /* ── Pre-compute edge fade LUT (one float per row/column) ── */
+    const fadeX = new Float32Array(W);
+    const fadeY = new Float32Array(H);
+    for (let i = 0; i < W; i++) {
+      const d = Math.min(i, W - 1 - i);
+      fadeX[i] = d >= EDGE_FADE ? 1.0 : (d / EDGE_FADE);
+    }
+    for (let i = 0; i < H; i++) {
+      const d = Math.min(i, H - 1 - i);
+      fadeY[i] = d >= EDGE_FADE ? 1.0 : (d / EDGE_FADE);
+    }
 
     /* ── Lighting (pre-computed once) ── */
     const lx = -0.3, ly = -0.5, lz = 1.0;
@@ -93,93 +101,66 @@ export function HeroSection() {
     function addDrop(cx: number, cy: number) {
       const r = DROP_RADIUS;
       const r2 = r * r;
-      const icx = Math.floor(cx) + BORDER;
-      const icy = Math.floor(cy) + BORDER;
+      const icx = Math.floor(cx);
+      const icy = Math.floor(cy);
       for (let dy = -r; dy <= r; dy++) {
         const gy = icy + dy;
-        if (gy < 1 || gy >= SH - 1) continue;
+        if (gy < 0 || gy >= H) continue;
         const dy2 = dy * dy;
         for (let dx = -r; dx <= r; dx++) {
           const gx = icx + dx;
-          if (gx < 1 || gx >= SW - 1) continue;
+          if (gx < 0 || gx >= W) continue;
           const d2 = dx * dx + dy2;
           if (d2 > r2) continue;
           const f = Math.cos((Math.sqrt(d2) / r) * Math.PI * 0.5);
-          curr[gy * SW + gx] += DROP_STRENGTH * f * f;
+          curr[gy * W + gx] += DROP_STRENGTH * f * f;
         }
       }
     }
 
     /* ── Mouse move: directional wake (canoe cutting water) ── */
-    // Both ridge and hull use ADDITIVE (+= / -=) operations only —
-    // no forced assignment (=) which would create hard discontinuities
-    // that radiate chaotic concentric waves in all directions.
+    // A single gentle ridge perpendicular to the direction of motion.
+    // Very low amplitude — the wave equation naturally turns this into
+    // a V-shaped wake pattern. No hull depression (was creating noise).
     function setWake(cx: number, cy: number, dirX: number, dirY: number) {
       const perpX = -dirY;
       const perpY = dirX;
-      const RIDGE_HALF = 8;
-      const HULL_HALF = 2;
-      const scx = Math.floor(cx) + BORDER;
-      const scy = Math.floor(cy) + BORDER;
+      const HALF = 5;
+      const scx = Math.floor(cx);
+      const scy = Math.floor(cy);
 
-      // Water ridge — positive, perpendicular to motion
-      for (let t = -RIDGE_HALF; t <= RIDGE_HALF; t++) {
+      for (let t = -HALF; t <= HALF; t++) {
         const gx = Math.floor(scx + perpX * t);
         const gy = Math.floor(scy + perpY * t);
-        if (gx < 1 || gx >= SW - 1 || gy < 1 || gy >= SH - 1) continue;
-        const f = Math.cos((t / RIDGE_HALF) * Math.PI * 0.5);
-        curr[gy * SW + gx] += 0.5 * f * f;
-      }
-
-      // Hull depression — negative, at center (additive, not forced)
-      for (let t = -HULL_HALF; t <= HULL_HALF; t++) {
-        const gx = Math.floor(scx + perpX * t);
-        const gy = Math.floor(scy + perpY * t);
-        if (gx < 1 || gx >= SW - 1 || gy < 1 || gy >= SH - 1) continue;
-        const f = Math.cos((t / HULL_HALF) * Math.PI * 0.5);
-        curr[gy * SW + gx] -= 0.6 * f;
+        if (gx < 1 || gx >= W - 1 || gy < 1 || gy >= H - 1) continue;
+        const f = Math.cos((t / HALF) * Math.PI * 0.5);
+        curr[gy * W + gx] += 0.15 * f * f;
       }
     }
 
-    /* ── Absorbing boundary (sponge layer — HIDDEN border only) ── */
-    // The sponge lives entirely in the BORDER region, which is never
-    // rendered. Waves exit the visible viewport freely and are
-    // gradually absorbed in the hidden border — giving the illusion
-    // that the lake continues infinitely past the screen edges.
-    const SPONGE = 35; // width of absorption zone (inside the BORDER)
-    function applySponge() {
-      for (let i = 0; i < SPONGE; i++) {
-        const d = i / SPONGE;
-        const f = d * d; // quadratic ramp: 0 at edge → 1 at interior boundary
-        for (let x = 0; x < SW; x++) {
-          const top = i * SW + x;
-          const bot = (SH - 1 - i) * SW + x;
-          curr[top] *= f; prev[top] *= f;
-          curr[bot] *= f; prev[bot] *= f;
-        }
-        for (let y = i; y < SH - i; y++) {
-          const left = y * SW + i;
-          const right = y * SW + (SW - 1 - i);
-          curr[left] *= f; prev[left] *= f;
-          curr[right] *= f; prev[right] *= f;
-        }
-      }
-    }
-
-    /* ── Wave equation propagation (correct 2D discrete form) ── */
-    // u_new = CENTER * u_curr + C2 * (neighbors) - u_prev, then * DAMPING
+    /* ── Wave equation propagation — Neumann (open) boundary conditions ── */
+    // All cells are updated, including edges.  For out-of-bounds
+    // neighbours we use the cell's own value (zero-gradient), which
+    // lets waves exit the grid smoothly instead of reflecting.
     function propagate() {
-      for (let y = 1; y < SH - 1; y++) {
-        const yw = y * SW;
-        for (let x = 1; x < SW - 1; x++) {
+      for (let y = 0; y < H; y++) {
+        const yw = y * W;
+        const hasTop = y > 0;
+        const hasBot = y < H - 1;
+        const topOff = hasTop ? -W : 0;
+        const botOff = hasBot ? W : 0;
+
+        for (let x = 0; x < W; x++) {
           const i = yw + x;
+          const hasLeft = x > 0;
+          const hasRight = x < W - 1;
           prev[i] =
             (CENTER * curr[i] +
               C2 *
-                (curr[i - 1] +
-                  curr[i + 1] +
-                  curr[i - SW] +
-                  curr[i + SW]) -
+                (curr[hasLeft ? i - 1 : i] +
+                  curr[hasRight ? i + 1 : i] +
+                  curr[i + topOff] +
+                  curr[i + botOff]) -
               prev[i]) *
             DAMPING;
         }
@@ -187,26 +168,26 @@ export function HeroSection() {
       const tmp = curr;
       curr = prev;
       prev = tmp;
-      applySponge();
     }
 
-    /* ── 3D render: Blinn-Phong shading (visible region only) ── */
+    /* ── 3D render: Blinn-Phong shading with edge fade ── */
     function render() {
-      for (let vy = 0; vy < VH; vy++) {
-        const sy = vy + BORDER; // sim Y (offset by BORDER)
+      for (let vy = 0; vy < H; vy++) {
+        const yw = vy * W;
+        const fy = fadeY[vy];
         /* Base gradient — dark forest green top → bottom */
-        const t = vy / VH;
+        const t = vy / H;
         const bR = 20 + t * 20; // 20 → 40
         const bG = 30 + t * 19; // 30 → 49
         const bB = 3 + t * 4; // 3 → 7
 
-        for (let vx = 0; vx < VW; vx++) {
-          const sx = vx + BORDER; // sim X (offset by BORDER)
-          const pi = (vy * VW + vx) << 2;
-          const si = sy * SW + sx;
+        for (let vx = 0; vx < W; vx++) {
+          const pi = (yw + vx) << 2;
+          const fx = fadeX[vx];
+          const sf = fx * fy; // combined edge fade (0 at corners, 1 at center)
 
-          /* Edge pixels of the sim grid: base gradient only */
-          if (sx < 1 || sx >= SW - 1 || sy < 1 || sy >= SH - 1) {
+          // Near the edge, skip wave computation entirely — pure base gradient
+          if (sf < 0.01) {
             px[pi] = bR;
             px[pi + 1] = bG;
             px[pi + 2] = bB;
@@ -214,9 +195,15 @@ export function HeroSection() {
             continue;
           }
 
-          /* Surface normal via central differences */
-          const dhdx = (curr[si - 1] - curr[si + 1]) * 0.5;
-          const dhdy = (curr[si - SW] - curr[si + SW]) * 0.5;
+          const si = yw + vx;
+
+          /* Surface normal via central differences (Neumann-safe) */
+          const dhdx =
+            (curr[vx > 0 ? si - 1 : si] - curr[vx < W - 1 ? si + 1 : si]) *
+            0.5 * sf;
+          const dhdy =
+            (curr[vy > 0 ? si - W : si] - curr[vy < H - 1 ? si + W : si]) *
+            0.5 * sf;
           const invN = 1.0 / Math.sqrt(dhdx * dhdx + dhdy * dhdy + 1.0);
           const nx = -dhdx * invN;
           const ny = -dhdy * invN;
@@ -275,12 +262,12 @@ export function HeroSection() {
     mq.addEventListener('change', onMotionChange);
 
     /* ── Input helpers ── */
-    // Convert client coords to visible-grid coords (0..VW, 0..VH)
+    // Convert client coords to grid coords (0..W, 0..H)
     function toGrid(clientX: number, clientY: number): [number, number] {
       const r = section.getBoundingClientRect();
       return [
-        ((clientX - r.left) / r.width) * VW,
-        ((clientY - r.top) / r.height) * VH,
+        ((clientX - r.left) / r.width) * W,
+        ((clientY - r.top) / r.height) * H,
       ];
     }
 
