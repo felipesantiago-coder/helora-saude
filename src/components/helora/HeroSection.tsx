@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/helora-store';
+import { AmbientSound } from './AmbientSound';
 
 /* ==========================================================================
  * 3D LAKE WAVE HERO BACKGROUND
@@ -428,6 +429,11 @@ export function HeroSection() {
             Conheça a equipe
           </button>
         </motion.div>
+      </div>
+
+      {/* Ambient sound toggle */}
+      <div className="absolute bottom-20 right-6 z-20">
+        <AmbientSound />
       </div>
 
       {/* Bottom transition */}
