@@ -55,9 +55,9 @@ export function HeroSection() {
     const DAMPING = 0.992;
     const C2 = 0.12; // c² — wave speed squared (0.5 = max stable, lower = slower)
     const CENTER = 2 - 4 * C2; // coefficient for current cell (= 1.52)
-    const DROP_RADIUS = 5;
-    const DROP_STRENGTH = 12;
-    const DROP_THROTTLE = 100; // ms
+    const DROP_RADIUS = 14;
+    const DROP_STRENGTH = 8;
+    const DROP_THROTTLE = 120; // ms
 
     const imgData = ctx.createImageData(W, H);
     const px = imgData.data;
