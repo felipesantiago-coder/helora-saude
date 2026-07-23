@@ -5,69 +5,230 @@ import { motion } from 'framer-motion';
 import { useAppStore } from '@/stores/helora-store';
 
 /* ==========================================================================
- * LIQUID MOUSE-REACTIVE HERO BACKGROUND
+ * 3D LAKE WAVE HERO BACKGROUND
  * ==========================================================================
  *
- * Physics:
- *   - Mouse movement spawns CONCENTRIC RIPPLE RINGS that expand
- *     outward from the cursor, like dropping a stone in water.
- *   - Ripples spread slowly and smoothly, simulating calm lake waves.
- *   - No blob effects — clean, minimal liquid surface.
+ * A real-time water simulation rendered on Canvas using:
+ *   1. The discrete WAVE EQUATION on a 256×256 height-field grid.
+ *      Two alternating Float32Array buffers propagate circular
+ *      waves that reflect off boundaries and interfere realistically.
+ *   2. Per-pixel surface-normal estimation (central differences)
+ *      fed into BLINN-PHONG shading (diffuse + specular) with a
+ *      directional light from the upper-left — this is what makes
+ *      each ripple look genuinely three-dimensional.
+ *   3. A vertical dark-green gradient composited into every pixel
+ *      so the canvas is fully opaque (no separate CSS gradient needed).
  *
- * Performance: CSS animations for ripples (GPU-accelerated).
- * No filter:blur().
+ * Mouse / touch movement drops gaussian "stones" into the height field;
+ * three initial drops fire on page load to hint at the interaction.
+ *
+ * Performance: ~65 k cells × (propagate + normal + lighting) per frame,
+ * well within 16 ms on modern hardware.  Canvas is 256×256 internally
+ * and CSS-stretched to fill the hero (bilinear interpolation = smooth).
+ *
+ * No filter:blur().  No DOM ripple elements.  No blobs.
  * ========================================================================== */
 
 export function HeroSection() {
   const setView = useAppStore((s) => s.setView);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
     const section = sectionRef.current;
-    if (!section) return;
+    if (!canvas || !section) return;
 
-    /* ── Ripple spawning ── */
-    let lastRipple = 0;
-    const RIPPLE_INTERVAL = 350; // ms between ripples (was 180, now slower spawn rate)
-    const MAX_RIPPLES = 12;
+    /* ── Grid ── */
+    const W = 256;
+    const H = 256;
+    canvas.width = W;
+    canvas.height = H;
 
-    function spawnRipple(x: number, y: number) {
-      const now = performance.now();
-      if (now - lastRipple < RIPPLE_INTERVAL) return;
-      lastRipple = now;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-      const existing = section.querySelectorAll('.liquid-ripple');
-      if (existing.length >= MAX_RIPPLES) {
-        existing[0].remove();
-      }
+    /* Two buffers for the wave equation */
+    let curr = new Float32Array(W * H);
+    let prev = new Float32Array(W * H);
 
-      /* 2 concentric rings, staggered */
-      for (let r = 0; r < 2; r++) {
-        const ring = document.createElement('div');
-        ring.className = 'liquid-ripple';
-        ring.style.left = x + 'px';
-        ring.style.top = y + 'px';
-        ring.style.animationDelay = (r * 0.5) + 's'; // staggered (was 0.22s, now 0.5s)
-        ring.style.width = (r === 0 ? 700 : 520) + 'px';
-        ring.style.height = (r === 0 ? 700 : 520) + 'px';
-        section.appendChild(ring);
-        ring.addEventListener('animationend', () => ring.remove());
+    const DAMPING = 0.984;
+    const DROP_RADIUS = 4;
+    const DROP_STRENGTH = 15;
+    const DROP_THROTTLE = 70; // ms
+
+    const imgData = ctx.createImageData(W, H);
+    const px = imgData.data;
+
+    /* ── Lighting (pre-computed once) ── */
+    // Directional light — upper-left, slightly behind
+    const lx = -0.3, ly = -0.5, lz = 1.0;
+    const lLen = Math.sqrt(lx * lx + ly * ly + lz * lz);
+    const Lx = lx / lLen, Ly = ly / lLen, Lz = lz / lLen;
+
+    // Blinn-Phong half-vector: H = normalize(L + V), V = (0, 0, 1)
+    const hhx = lx, hhy = ly, hhz = lz + 1.0;
+    const hLen = Math.sqrt(hhx * hhx + hhy * hhy + hhz * hhz);
+    const Hx = hhx / hLen, Hy = hhy / hLen, Hz = hhz / hLen;
+
+    let rafId = 0;
+    let lastDropTime = 0;
+
+    /* ── Drop a gaussian stone into the height field ── */
+    function addDrop(cx: number, cy: number) {
+      const r = DROP_RADIUS;
+      const r2 = r * r;
+      const icx = Math.floor(cx);
+      const icy = Math.floor(cy);
+      for (let dy = -r; dy <= r; dy++) {
+        const gy = icy + dy;
+        if (gy < 2 || gy >= H - 2) continue;
+        const dy2 = dy * dy;
+        for (let dx = -r; dx <= r; dx++) {
+          const gx = icx + dx;
+          if (gx < 2 || gx >= W - 2) continue;
+          const d2 = dx * dx + dy2;
+          if (d2 > r2) continue;
+          const f = Math.cos((Math.sqrt(d2) / r) * Math.PI * 0.5);
+          curr[gy * W + gx] += DROP_STRENGTH * f * f;
+        }
       }
     }
 
-    /* ── Lifecycle ── */
-    function onMouseMove(e: MouseEvent) {
+    /* ── Wave equation propagation ── */
+    function propagate() {
+      for (let y = 1; y < H - 1; y++) {
+        const yw = y * W;
+        for (let x = 1; x < W - 1; x++) {
+          const i = yw + x;
+          prev[i] =
+            ((curr[i - 1] + curr[i + 1] + curr[i - W] + curr[i + W]) * 0.5 -
+              prev[i]) *
+            DAMPING;
+        }
+      }
+      const tmp = curr;
+      curr = prev;
+      prev = tmp;
+    }
+
+    /* ── 3D render: Blinn-Phong shading ── */
+    function render() {
+      for (let y = 0; y < H; y++) {
+        /* Base gradient — dark forest green top → bottom */
+        const t = y / H;
+        const bR = 20 + t * 20; // 20 → 40
+        const bG = 30 + t * 19; // 30 → 49
+        const bB = 3 + t * 4; // 3 → 7
+
+        for (let x = 0; x < W; x++) {
+          const i = y * W + x;
+          const pi = i << 2; // i * 4
+
+          /* Edge pixels: base gradient only */
+          if (x < 1 || x >= W - 1 || y < 1 || y >= H - 1) {
+            px[pi] = bR;
+            px[pi + 1] = bG;
+            px[pi + 2] = bB;
+            px[pi + 3] = 255;
+            continue;
+          }
+
+          /* Surface normal via central differences */
+          const dhdx = (curr[i - 1] - curr[i + 1]) * 0.5;
+          const dhdy = (curr[i - W] - curr[i + W]) * 0.5;
+          const invN = 1.0 / Math.sqrt(dhdx * dhdx + dhdy * dhdy + 1.0);
+          const nx = -dhdx * invN;
+          const ny = -dhdy * invN;
+          const nz = invN;
+
+          /* Diffuse */
+          const diff = nx * Lx + ny * Ly + nz * Lz;
+          const diffuse = diff > 0 ? diff : 0;
+
+          /* Specular (Blinn-Phong, exponent 16 via repeated squaring) */
+          const sd = nx * Hx + ny * Hy + nz * Hz;
+          if (sd > 0) {
+            let s2 = sd * sd; // sd^2
+            let s4 = s2 * s2; // sd^4
+            const spec = s4 * s4; // sd^16
+
+            /* Combine: ambient + diffuse + specular */
+            const light = 0.55 + diffuse * 0.4 + spec * 0.55;
+
+            /* Specular adds a cool white-green glint */
+            const specR = spec * 14;
+            const specG = spec * 35;
+            const specB = spec * 18;
+
+            px[pi] = Math.min(255, (bR * light + specR) | 0);
+            px[pi + 1] = Math.min(255, (bG * light + specG) | 0);
+            px[pi + 2] = Math.min(255, (bB * light + specB) | 0);
+          } else {
+            /* No specular contribution — diffuse only */
+            const light = 0.55 + diffuse * 0.4;
+            px[pi] = Math.min(255, (bR * light) | 0);
+            px[pi + 1] = Math.min(255, (bG * light) | 0);
+            px[pi + 2] = Math.min(255, (bB * light) | 0);
+          }
+          px[pi + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+    }
+
+    /* ── Main loop ── */
+    function tick() {
+      propagate();
+      render();
+      rafId = requestAnimationFrame(tick);
+    }
+
+    /* ── Initial drops to hint at interaction ── */
+    const initTimers = [
+      setTimeout(() => addDrop(W * 0.5, H * 0.42), 600),
+      setTimeout(() => addDrop(W * 0.35, H * 0.55), 1400),
+      setTimeout(() => addDrop(W * 0.65, H * 0.35), 2200),
+    ];
+
+    /* ── Start ── */
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (!mq.matches) rafId = requestAnimationFrame(tick);
+
+    function onMotionChange(e: MediaQueryListEvent) {
+      if (e.matches) cancelAnimationFrame(rafId);
+      else rafId = requestAnimationFrame(tick);
+    }
+    mq.addEventListener('change', onMotionChange);
+
+    /* ── Input ── */
+    function handlePointer(clientX: number, clientY: number) {
       const r = section.getBoundingClientRect();
-      const x = e.clientX - r.left;
-      const y = e.clientY - r.top;
-      spawnRipple(x, y);
+      const cx = ((clientX - r.left) / r.width) * W;
+      const cy = ((clientY - r.top) / r.height) * H;
+      const now = performance.now();
+      if (now - lastDropTime < DROP_THROTTLE) return;
+      lastDropTime = now;
+      addDrop(cx, cy);
+    }
+
+    function onMouseMove(e: MouseEvent) {
+      handlePointer(e.clientX, e.clientY);
+    }
+    function onTouchMove(e: TouchEvent) {
+      const touch = e.touches[0];
+      if (touch) handlePointer(touch.clientX, touch.clientY);
     }
 
     section.addEventListener('mousemove', onMouseMove, { passive: true });
+    section.addEventListener('touchmove', onTouchMove, { passive: true });
 
     return () => {
+      cancelAnimationFrame(rafId);
+      mq.removeEventListener('change', onMotionChange);
       section.removeEventListener('mousemove', onMouseMove);
-      section.querySelectorAll('.liquid-ripple').forEach((el) => el.remove());
+      section.removeEventListener('touchmove', onTouchMove);
+      initTimers.forEach(clearTimeout);
     };
   }, []);
 
@@ -77,28 +238,23 @@ export function HeroSection() {
       id="hero"
       className="relative min-h-[100dvh] flex items-center justify-center overflow-hidden"
     >
-      {/* Liquid Background — clean gradient, no blobs */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        {/* Smooth natural base gradient */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(175deg, #182405 0%, #1f2e07 25%, #283106 50%, #273009 75%, #242c0a 100%)',
-          }}
-        />
+      {/* 3D Water Surface (Canvas — fully opaque, includes gradient + waves) */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+        style={{ imageRendering: 'auto' }}
+        aria-hidden="true"
+      />
 
-        {/* Subtle central canopy light + vignette */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: [
-              'radial-gradient(ellipse at 50% 35%, rgba(90,110,55,0.10) 0%, transparent 50%)',
-              'radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(10,16,3,0.30) 100%)',
-            ].join(', '),
-          }}
-        />
-      </div>
+      {/* Vignette overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        aria-hidden="true"
+        style={{
+          background:
+            'radial-gradient(ellipse at 50% 40%, transparent 25%, rgba(10,16,3,0.50) 100%)',
+        }}
+      />
 
       {/* Content */}
       <div className="relative z-10 max-w-2xl mx-auto px-6 text-center">
@@ -119,7 +275,8 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.25, 0.1, 0.25, 1], delay: 0.5 }}
         >
-          Um espaço de acolhimento onde você pode respirar, ser ouvido e cuidar de si. Sem pressa, sem julgamento.
+          Um espaço de acolhimento onde você pode respirar, ser ouvido e cuidar de
+          si. Sem pressa, sem julgamento.
         </motion.p>
 
         <motion.div
@@ -136,7 +293,9 @@ export function HeroSection() {
           </button>
           <button
             onClick={() => {
-              document.getElementById('equipe')?.scrollIntoView({ behavior: 'smooth' });
+              document
+                .getElementById('equipe')
+                ?.scrollIntoView({ behavior: 'smooth' });
             }}
             className="font-sans font-medium text-sm text-helora-gainsboro/60 hover:text-white/90 border border-helora-gainsboro/15 hover:border-helora-gainsboro/35 rounded-full px-6 py-2.5 sm:py-3 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50"
           >
@@ -146,7 +305,10 @@ export function HeroSection() {
       </div>
 
       {/* Bottom transition */}
-      <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] z-10" aria-hidden="true">
+      <div
+        className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0] z-10"
+        aria-hidden="true"
+      >
         <svg
           viewBox="0 0 1440 60"
           fill="none"
