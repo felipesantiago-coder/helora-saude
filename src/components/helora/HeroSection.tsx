@@ -55,9 +55,14 @@ export function HeroSection() {
     const DAMPING = 0.992;
     const C2 = 0.12; // c² — wave speed squared (0.5 = max stable, lower = slower)
     const CENTER = 2 - 4 * C2; // coefficient for current cell (= 1.52)
+    /* Drop params (click → concentric ripples) */
     const DROP_RADIUS = 14;
     const DROP_STRENGTH = 8;
-    const DROP_THROTTLE = 120; // ms
+
+    /* Object params (drag → solid object sliding on surface) */
+    const OBJ_RADIUS = 5;
+    const OBJ_DEPTH = -5;
+    const OBJ_THROTTLE = 30; // ms — smooth trail
 
     const imgData = ctx.createImageData(W, H);
     const px = imgData.data;
@@ -74,9 +79,9 @@ export function HeroSection() {
     const Hx = hhx / hLen, Hy = hhy / hLen, Hz = hhz / hLen;
 
     let rafId = 0;
-    let lastDropTime = 0;
+    let lastObjTime = 0;
 
-    /* ── Drop a gaussian stone into the height field ── */
+    /* ── Click: drop a gaussian stone → concentric ripples ── */
     function addDrop(cx: number, cy: number) {
       const r = DROP_RADIUS;
       const r2 = r * r;
@@ -93,6 +98,30 @@ export function HeroSection() {
           if (d2 > r2) continue;
           const f = Math.cos((Math.sqrt(d2) / r) * Math.PI * 0.5);
           curr[gy * W + gx] += DROP_STRENGTH * f * f;
+        }
+      }
+    }
+
+    /* ── Drag: solid object depression on the surface ── */
+    // Uses = (assignment) instead of += — the surface is forced down at
+    // the mouse position, simulating a solid object displacing water.
+    // When the mouse moves away, the surface rebounds, creating a wake.
+    function setDepression(cx: number, cy: number) {
+      const r = OBJ_RADIUS;
+      const r2 = r * r;
+      const icx = Math.floor(cx);
+      const icy = Math.floor(cy);
+      for (let dy = -r; dy <= r; dy++) {
+        const gy = icy + dy;
+        if (gy < 2 || gy >= H - 2) continue;
+        const dy2 = dy * dy;
+        for (let dx = -r; dx <= r; dx++) {
+          const gx = icx + dx;
+          if (gx < 2 || gx >= W - 2) continue;
+          const d2 = dx * dx + dy2;
+          if (d2 > r2) continue;
+          const f = Math.cos((Math.sqrt(d2) / r) * Math.PI * 0.5);
+          curr[gy * W + gx] = OBJ_DEPTH * f * f; // SET, not add
         }
       }
     }
@@ -204,32 +233,53 @@ export function HeroSection() {
     }
     mq.addEventListener('change', onMotionChange);
 
-    /* ── Input ── */
-    function handlePointer(clientX: number, clientY: number) {
+    /* ── Input: click → ripple, drag → solid object ── */
+    function toGrid(clientX: number, clientY: number): [number, number] {
       const r = section.getBoundingClientRect();
-      const cx = ((clientX - r.left) / r.width) * W;
-      const cy = ((clientY - r.top) / r.height) * H;
-      const now = performance.now();
-      if (now - lastDropTime < DROP_THROTTLE) return;
-      lastDropTime = now;
+      return [
+        ((clientX - r.left) / r.width) * W,
+        ((clientY - r.top) / r.height) * H,
+      ];
+    }
+
+    function onMouseDown(e: MouseEvent) {
+      const [cx, cy] = toGrid(e.clientX, e.clientY);
       addDrop(cx, cy);
     }
-
     function onMouseMove(e: MouseEvent) {
-      handlePointer(e.clientX, e.clientY);
+      const now = performance.now();
+      if (now - lastObjTime < OBJ_THROTTLE) return;
+      lastObjTime = now;
+      const [cx, cy] = toGrid(e.clientX, e.clientY);
+      setDepression(cx, cy);
+    }
+    function onTouchStart(e: TouchEvent) {
+      const t = e.touches[0];
+      if (!t) return;
+      const [cx, cy] = toGrid(t.clientX, t.clientY);
+      addDrop(cx, cy);
     }
     function onTouchMove(e: TouchEvent) {
-      const touch = e.touches[0];
-      if (touch) handlePointer(touch.clientX, touch.clientY);
+      const now = performance.now();
+      if (now - lastObjTime < OBJ_THROTTLE) return;
+      lastObjTime = now;
+      const t = e.touches[0];
+      if (!t) return;
+      const [cx, cy] = toGrid(t.clientX, t.clientY);
+      setDepression(cx, cy);
     }
 
+    section.addEventListener('mousedown', onMouseDown, { passive: true });
     section.addEventListener('mousemove', onMouseMove, { passive: true });
+    section.addEventListener('touchstart', onTouchStart, { passive: true });
     section.addEventListener('touchmove', onTouchMove, { passive: true });
 
     return () => {
       cancelAnimationFrame(rafId);
       mq.removeEventListener('change', onMotionChange);
+      section.removeEventListener('mousedown', onMouseDown);
       section.removeEventListener('mousemove', onMouseMove);
+      section.removeEventListener('touchstart', onTouchStart);
       section.removeEventListener('touchmove', onTouchMove);
     };
   }, []);
