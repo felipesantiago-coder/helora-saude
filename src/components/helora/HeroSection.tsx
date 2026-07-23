@@ -60,7 +60,8 @@ export function HeroSection() {
     const DROP_STRENGTH = 8;
 
     /* Wake params (mouse move → canoe cutting water) */
-    const OBJ_THROTTLE = 30; // ms — smooth trail
+    const OBJ_THROTTLE = 80; // ms — fewer disturbances = calmer wake
+    const MIN_MOVE = 2.0; // min grid-cell movement to trigger wake
 
     const imgData = ctx.createImageData(W, H);
     const px = imgData.data;
@@ -111,8 +112,8 @@ export function HeroSection() {
       // Perpendicular to movement direction
       const perpX = -dirY;
       const perpY = dirX;
-      const RIDGE_HALF = 6;
-      const HULL_HALF = 2;
+      const RIDGE_HALF = 10;
+      const HULL_HALF = 3;
 
       // Water ridge — positive, perpendicular to motion (+= additive)
       for (let t = -RIDGE_HALF; t <= RIDGE_HALF; t++) {
@@ -120,7 +121,7 @@ export function HeroSection() {
         const gy = Math.floor(cy + perpY * t);
         if (gx < 2 || gx >= W - 2 || gy < 2 || gy >= H - 2) continue;
         const f = Math.cos((t / RIDGE_HALF) * Math.PI * 0.5);
-        curr[gy * W + gx] += 2.5 * f * f;
+        curr[gy * W + gx] += 1.2 * f * f;
       }
 
       // Hull depression — negative, forced at center (= assignment)
@@ -129,7 +130,29 @@ export function HeroSection() {
         const gy = Math.floor(cy + perpY * t);
         if (gx < 2 || gx >= W - 2 || gy < 2 || gy >= H - 2) continue;
         const f = Math.cos((t / HULL_HALF) * Math.PI * 0.5);
-        curr[gy * W + gx] = -3 * f;
+        curr[gy * W + gx] = -1.5 * f;
+      }
+    }
+
+    /* ── Absorbing boundary (sponge layer) ── */
+    // Damps wave energy near edges so waves are absorbed, not reflected.
+    const SPONGE = 25; // border width in cells
+    function applySponge() {
+      for (let i = 0; i < SPONGE; i++) {
+        const d = i / SPONGE;
+        const f = d * d; // quadratic ramp: 0 at edge → 1 at interior
+        for (let x = 0; x < W; x++) {
+          const top = i * W + x;
+          const bot = (H - 1 - i) * W + x;
+          curr[top] *= f; prev[top] *= f;
+          curr[bot] *= f; prev[bot] *= f;
+        }
+        for (let y = i; y < H - i; y++) {
+          const left = y * W + i;
+          const right = y * W + (W - 1 - i);
+          curr[left] *= f; prev[left] *= f;
+          curr[right] *= f; prev[right] *= f;
+        }
       }
     }
 
@@ -156,6 +179,7 @@ export function HeroSection() {
       const tmp = curr;
       curr = prev;
       prev = tmp;
+      applySponge();
     }
 
     /* ── 3D render: Blinn-Phong shading ── */
@@ -268,7 +292,7 @@ export function HeroSection() {
       let dx = cx - prevGX;
       let dy = cy - prevGY;
       const len = Math.sqrt(dx * dx + dy * dy);
-      if (len < 0.5) return;
+      if (len < MIN_MOVE) return;
       dx /= len;
       dy /= len;
       prevGX = cx;
@@ -300,7 +324,7 @@ export function HeroSection() {
       let dx = cx - prevGX;
       let dy = cy - prevGY;
       const len = Math.sqrt(dx * dx + dy * dy);
-      if (len < 0.5) return;
+      if (len < MIN_MOVE) return;
       dx /= len;
       dy /= len;
       prevGX = cx;
