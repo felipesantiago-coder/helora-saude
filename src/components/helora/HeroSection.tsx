@@ -233,7 +233,9 @@ export function HeroSection() {
     }
     mq.addEventListener('change', onMotionChange);
 
-    /* ── Input: click → ripple, drag → solid object ── */
+    /* ── Input: click → ripple, drag (button held) → solid object ── */
+    let mouseIsDown = false;
+
     function toGrid(clientX: number, clientY: number): [number, number] {
       const r = section.getBoundingClientRect();
       return [
@@ -243,10 +245,15 @@ export function HeroSection() {
     }
 
     function onMouseDown(e: MouseEvent) {
+      mouseIsDown = true;
       const [cx, cy] = toGrid(e.clientX, e.clientY);
       addDrop(cx, cy);
     }
+    function onMouseUp() {
+      mouseIsDown = false;
+    }
     function onMouseMove(e: MouseEvent) {
+      if (!mouseIsDown) return;
       const now = performance.now();
       if (now - lastObjTime < OBJ_THROTTLE) return;
       lastObjTime = now;
@@ -270,6 +277,7 @@ export function HeroSection() {
     }
 
     section.addEventListener('mousedown', onMouseDown, { passive: true });
+    section.addEventListener('mouseup', onMouseUp, { passive: true });
     section.addEventListener('mousemove', onMouseMove, { passive: true });
     section.addEventListener('touchstart', onTouchStart, { passive: true });
     section.addEventListener('touchmove', onTouchMove, { passive: true });
@@ -278,6 +286,7 @@ export function HeroSection() {
       cancelAnimationFrame(rafId);
       mq.removeEventListener('change', onMotionChange);
       section.removeEventListener('mousedown', onMouseDown);
+      section.removeEventListener('mouseup', onMouseUp);
       section.removeEventListener('mousemove', onMouseMove);
       section.removeEventListener('touchstart', onTouchStart);
       section.removeEventListener('touchmove', onTouchMove);
