@@ -59,9 +59,7 @@ export function HeroSection() {
     const DROP_RADIUS = 14;
     const DROP_STRENGTH = 8;
 
-    /* Object params (drag → solid object sliding on surface) */
-    const OBJ_RADIUS = 5;
-    const OBJ_DEPTH = -5;
+    /* Wake params (mouse move → canoe cutting water) */
     const OBJ_THROTTLE = 30; // ms — smooth trail
 
     const imgData = ctx.createImageData(W, H);
@@ -80,6 +78,8 @@ export function HeroSection() {
 
     let rafId = 0;
     let lastObjTime = 0;
+    let prevGX = -1;
+    let prevGY = -1;
 
     /* ── Click: drop a gaussian stone → concentric ripples ── */
     function addDrop(cx: number, cy: number) {
@@ -102,27 +102,34 @@ export function HeroSection() {
       }
     }
 
-    /* ── Drag: solid object depression on the surface ── */
-    // Uses = (assignment) instead of += — the surface is forced down at
-    // the mouse position, simulating a solid object displacing water.
-    // When the mouse moves away, the surface rebounds, creating a wake.
-    function setDepression(cx: number, cy: number) {
-      const r = OBJ_RADIUS;
-      const r2 = r * r;
-      const icx = Math.floor(cx);
-      const icy = Math.floor(cy);
-      for (let dy = -r; dy <= r; dy++) {
-        const gy = icy + dy;
-        if (gy < 2 || gy >= H - 2) continue;
-        const dy2 = dy * dy;
-        for (let dx = -r; dx <= r; dx++) {
-          const gx = icx + dx;
-          if (gx < 2 || gx >= W - 2) continue;
-          const d2 = dx * dx + dy2;
-          if (d2 > r2) continue;
-          const f = Math.cos((Math.sqrt(d2) / r) * Math.PI * 0.5);
-          curr[gy * W + gx] = OBJ_DEPTH * f * f; // SET, not add
-        }
+    /* ── Mouse move: directional wake (canoe cutting water) ── */
+    // A canoe doesn't push water equally in all directions — it pushes
+    // water to the SIDES (ridge perpendicular to motion) and DOWN at
+    // the center (hull displacement). This asymmetric disturbance creates
+    // a V-shaped wake through wave interference, not concentric circles.
+    function setWake(cx: number, cy: number, dirX: number, dirY: number) {
+      // Perpendicular to movement direction
+      const perpX = -dirY;
+      const perpY = dirX;
+      const RIDGE_HALF = 6;
+      const HULL_HALF = 2;
+
+      // Water ridge — positive, perpendicular to motion (+= additive)
+      for (let t = -RIDGE_HALF; t <= RIDGE_HALF; t++) {
+        const gx = Math.floor(cx + perpX * t);
+        const gy = Math.floor(cy + perpY * t);
+        if (gx < 2 || gx >= W - 2 || gy < 2 || gy >= H - 2) continue;
+        const f = Math.cos((t / RIDGE_HALF) * Math.PI * 0.5);
+        curr[gy * W + gx] += 2.5 * f * f;
+      }
+
+      // Hull depression — negative, forced at center (= assignment)
+      for (let t = -HULL_HALF; t <= HULL_HALF; t++) {
+        const gx = Math.floor(cx + perpX * t);
+        const gy = Math.floor(cy + perpY * t);
+        if (gx < 2 || gx >= W - 2 || gy < 2 || gy >= H - 2) continue;
+        const f = Math.cos((t / HULL_HALF) * Math.PI * 0.5);
+        curr[gy * W + gx] = -3 * f;
       }
     }
 
@@ -233,9 +240,7 @@ export function HeroSection() {
     }
     mq.addEventListener('change', onMotionChange);
 
-    /* ── Input: click → ripple, drag (button held) → solid object ── */
-    let mouseIsDown = false;
-
+    /* ── Input: click → concentric ripple, move → canoe wake ── */
     function toGrid(clientX: number, clientY: number): [number, number] {
       const r = section.getBoundingClientRect();
       return [
@@ -245,39 +250,66 @@ export function HeroSection() {
     }
 
     function onMouseDown(e: MouseEvent) {
-      mouseIsDown = true;
       const [cx, cy] = toGrid(e.clientX, e.clientY);
       addDrop(cx, cy);
     }
-    function onMouseUp() {
-      mouseIsDown = false;
-    }
     function onMouseMove(e: MouseEvent) {
-      if (!mouseIsDown) return;
+      const [cx, cy] = toGrid(e.clientX, e.clientY);
       const now = performance.now();
       if (now - lastObjTime < OBJ_THROTTLE) return;
       lastObjTime = now;
-      const [cx, cy] = toGrid(e.clientX, e.clientY);
-      setDepression(cx, cy);
+
+      // Compute movement direction from previous position
+      if (prevGX < 0) {
+        prevGX = cx;
+        prevGY = cy;
+        return;
+      }
+      let dx = cx - prevGX;
+      let dy = cy - prevGY;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 0.5) return;
+      dx /= len;
+      dy /= len;
+      prevGX = cx;
+      prevGY = cy;
+
+      setWake(cx, cy, dx, dy);
     }
     function onTouchStart(e: TouchEvent) {
       const t = e.touches[0];
       if (!t) return;
       const [cx, cy] = toGrid(t.clientX, t.clientY);
       addDrop(cx, cy);
+      prevGX = cx;
+      prevGY = cy;
     }
     function onTouchMove(e: TouchEvent) {
-      const now = performance.now();
-      if (now - lastObjTime < OBJ_THROTTLE) return;
-      lastObjTime = now;
       const t = e.touches[0];
       if (!t) return;
       const [cx, cy] = toGrid(t.clientX, t.clientY);
-      setDepression(cx, cy);
+      const now = performance.now();
+      if (now - lastObjTime < OBJ_THROTTLE) return;
+      lastObjTime = now;
+
+      if (prevGX < 0) {
+        prevGX = cx;
+        prevGY = cy;
+        return;
+      }
+      let dx = cx - prevGX;
+      let dy = cy - prevGY;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 0.5) return;
+      dx /= len;
+      dy /= len;
+      prevGX = cx;
+      prevGY = cy;
+
+      setWake(cx, cy, dx, dy);
     }
 
     section.addEventListener('mousedown', onMouseDown, { passive: true });
-    section.addEventListener('mouseup', onMouseUp, { passive: true });
     section.addEventListener('mousemove', onMouseMove, { passive: true });
     section.addEventListener('touchstart', onTouchStart, { passive: true });
     section.addEventListener('touchmove', onTouchMove, { passive: true });
@@ -286,7 +318,6 @@ export function HeroSection() {
       cancelAnimationFrame(rafId);
       mq.removeEventListener('change', onMotionChange);
       section.removeEventListener('mousedown', onMouseDown);
-      section.removeEventListener('mouseup', onMouseUp);
       section.removeEventListener('mousemove', onMouseMove);
       section.removeEventListener('touchstart', onTouchStart);
       section.removeEventListener('touchmove', onTouchMove);
