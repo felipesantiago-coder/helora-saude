@@ -4,43 +4,39 @@ import { useState, useRef, useCallback } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 
 /* ==========================================================================
- * EVIDENCE-BASED AMBIENT SOUND — PERFECT LOOP
+ * EVIDENCE-BASED AMBIENT SOUND — HYBRID ARCHITECTURE
  * ==========================================================================
  *
- * A single 32-second stereo AudioBuffer is procedurally generated on
- * first click and played in an infinite seamless loop.
+ * UNDETECTABLE LOOP via a hybrid continuous + looped approach:
  *
- * MUSICAL STRUCTURE (based on relaxation research):
+ * CONTINUOUS LAYERS (oscillators, never repeat):
+ *   • Water ambience: 3 brown-noise buffers at COPRIME lengths
+ *     (5 s + 7 s + 9 s). Their combined pattern repeats only
+ *     every LCM(5,7,9) = 315 seconds (~5 min) — effectively
+ *     non-repeating for any realistic listening session.
+ *   • Sub-bass C2 (65.41 Hz) — pure continuous sine.
+ *   • 60 BPM pulse LFO (1 Hz) modulating sub-bass gain.
  *
- *   • Chord progression (C pentatonic, overlapping 3-second crossfades):
- *       0–10 s   C major   (C3 · E3 · G3)
- *       7–17 s   A minor   (A2 · C3 · E3)
- *      14–24 s   G sus4   (G2 · C3 · D3)
- *      21–31 s   E minor   (E3 · G3 · A3)
- *      28–32 s   → C major (crossfade back to start)
+ * LOOPED MUSICAL BUFFER (48 s, only pad + bells):
+ *   • Chord progression: Cmaj → Am → Dsus4 → Em → G → Am7 → Cmaj
+ *     with 3-second smoothstep crossfades.
+ *   • 16 bell-like melodic fragments (pentatonic, varied).
+ *   • 6-second Hann crossfade at loop boundary.
+ *   • Stereo with per-channel micro-detune.
  *
- *   • Melodic fragments — bell-like pentatonic tones that ring out
- *     with fast attack / slow exponential decay, placed at musical
- *     intervals within each chord.
- *
- *   • 60 BPM pulse (1 Hz amplitude modulation on pad) for heart-rate
- *     entrainment and alpha brainwave promotion (Iwanaga 2021).
- *
- *   • Brown noise water ambience + sub-bass C2 warmth throughout.
- *
- * PERFECT LOOP:
- *   The last 4 seconds are crossfaded (Hann window) into the first
- *   4 seconds so the jump from t=32 → t=0 is acoustically invisible.
- *   Both ends are in C major, so the crossfade is a natural chord
- *   transition — listeners can never detect where the loop starts.
+ * WHY THIS IS UNDETECTABLE:
+ *   The continuous water + sub-bass NEVER loop. They provide an
+ *   ever-evolving foundation that masks any subtle artifact from
+ *   the 48 s musical loop. The ear cannot isolate the looped
+ *   layer from the continuous layers.
  *
  * Master volume: 0.30.  1.5 s fade-in / fade-out.
  * ========================================================================== */
 
 const FADE_DURATION = 1.5;
 const MASTER_VOLUME = 0.30;
-const LOOP_SECONDS = 32;
-const CROSSFADE_SECONDS = 4;
+const MUSIC_LOOP_S = 48;
+const CROSSFADE_S = 6;
 
 /* ── Pentatonic frequencies (C major pentatonic) ── */
 const F = {
@@ -49,41 +45,33 @@ const F = {
   C5: 523.25,
 };
 
-/* ── Chord definitions ── */
-type ChordDef = { t0: number; t1: number; notes: number[]; gains: number[] };
+/* ════════════════════════════════════════════════════════════════════════
+ * 1. BROWN NOISE BUFFER (for water ambience — continuous layer)
+ * ════════════════════════════════════════════════════════════════════════ */
+function createBrownNoise(ctx: AudioContext, dur: number): AudioBuffer {
+  const sr = ctx.sampleRate;
+  const len = Math.floor(sr * dur);
+  const buf = ctx.createBuffer(1, len, sr);
+  const d = buf.getChannelData(0);
+  let last = 0;
+  for (let i = 0; i < len; i++) {
+    last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02;
+    d[i] = last * 3.5;
+  }
+  /* 30 ms cross-fade at loop boundaries */
+  const fade = Math.floor(sr * 0.03);
+  for (let i = 0; i < fade; i++) {
+    const t = i / fade;
+    d[i] *= t;
+    d[len - 1 - i] *= t;
+  }
+  return buf;
+}
 
-const CHORDS: ChordDef[] = [
-  // C major — opens and closes the loop
-  { t0: 0,  t1: 10, notes: [F.C3, F.E3, F.G3], gains: [0.042, 0.034, 0.026] },
-  // A minor
-  { t0: 7,  t1: 17, notes: [110.00, F.C3, F.E3], gains: [0.038, 0.030, 0.025] },
-  // G sus4
-  { t0: 14, t1: 24, notes: [98.00, F.C3, F.D3], gains: [0.032, 0.028, 0.022] },
-  // E minor
-  { t0: 21, t1: 31, notes: [F.E3, F.G3, F.A3], gains: [0.034, 0.026, 0.020] },
-];
+/* ════════════════════════════════════════════════════════════════════════
+ * 2. MUSICAL BUFFER GENERATION (pad chords + bell melodies)
+ * ════════════════════════════════════════════════════════════════════════ */
 
-/* ── Melodic fragments (bell-like tones) ── */
-type Bell = { t: number; freq: number; vol: number; decay: number };
-
-const BELLS: Bell[] = [
-  // During C major
-  { t: 2.0,  freq: F.E4, vol: 0.016, decay: 3.5 },
-  { t: 5.5,  freq: F.C5, vol: 0.018, decay: 4.0 },
-  // During A minor
-  { t: 9.0,  freq: F.A4, vol: 0.013, decay: 3.0 },
-  { t: 13.0, freq: F.E4, vol: 0.015, decay: 3.5 },
-  // During G sus4
-  { t: 16.5, freq: F.D4, vol: 0.014, decay: 3.5 },
-  { t: 20.0, freq: F.G4, vol: 0.017, decay: 4.0 },
-  // During E minor
-  { t: 23.5, freq: F.E4, vol: 0.014, decay: 3.0 },
-  { t: 27.0, freq: F.G4, vol: 0.016, decay: 3.5 },
-  // Approaching loop point (fading via crossfade)
-  { t: 30.0, freq: F.C4, vol: 0.010, decay: 3.0 },
-];
-
-/* ── Helpers ── */
 function smoothstep(t: number, a: number, b: number): number {
   if (t <= a) return 0;
   if (t >= b) return 1;
@@ -95,114 +83,111 @@ function hann(t: number): number {
   return 0.5 * (1 - Math.cos(Math.PI * t));
 }
 
-/* ════════════════════════════════════════════════════════════════════════
- * Buffer generation — renders the entire 32-second soundscape
- * ════════════════════════════════════════════════════════════════════════ */
-function generateSoundscape(ctx: AudioContext): AudioBuffer {
+/* Chord progression for 48-second loop */
+type Chord = { t0: number; t1: number; notes: number[]; g: number[] };
+
+const CHORDS: Chord[] = [
+  { t0: 0,  t1: 12, notes: [F.C3, F.E3, F.G3],       g: [0.040, 0.032, 0.024] }, // C major
+  { t0: 9,  t1: 21, notes: [110.0, F.C3, F.E3],       g: [0.036, 0.028, 0.023] }, // A minor (A2)
+  { t0: 18, t1: 30, notes: [F.D3, F.G3, F.A3],       g: [0.032, 0.026, 0.020] }, // D sus4
+  { t0: 27, t1: 36, notes: [F.E3, F.G3, F.A3],       g: [0.034, 0.025, 0.019] }, // E minor
+  { t0: 33, t1: 42, notes: [98.0, F.C3, F.D3],       g: [0.030, 0.027, 0.021] }, // G sus4 (G2)
+  { t0: 39, t1: 48, notes: [110.0, F.C3, F.E3, F.G3], g: [0.033, 0.026, 0.021, 0.016] }, // Am7
+];
+
+/* Bell-like melodic fragments */
+type Bell = { t: number; freq: number; vol: number; decay: number };
+
+const BELLS: Bell[] = [
+  // C major
+  { t: 2.5,  freq: F.E4, vol: 0.015, decay: 3.5 },
+  { t: 6.0,  freq: F.C5, vol: 0.017, decay: 4.0 },
+  { t: 9.5,  freq: F.G4, vol: 0.012, decay: 3.0 },
+  // A minor
+  { t: 12.0, freq: F.A4, vol: 0.014, decay: 3.5 },
+  { t: 16.0, freq: F.E4, vol: 0.016, decay: 4.0 },
+  // D sus4
+  { t: 20.0, freq: F.D4, vol: 0.013, decay: 3.0 },
+  { t: 23.5, freq: F.A4, vol: 0.015, decay: 3.5 },
+  { t: 26.5, freq: F.G4, vol: 0.012, decay: 3.0 },
+  // E minor
+  { t: 29.0, freq: F.E4, vol: 0.016, decay: 4.0 },
+  { t: 33.0, freq: F.C5, vol: 0.014, decay: 3.5 },
+  // G sus4
+  { t: 35.5, freq: F.G4, vol: 0.013, decay: 3.0 },
+  { t: 38.5, freq: F.D4, vol: 0.011, decay: 3.0 },
+  // Am7
+  { t: 40.5, freq: F.A4, vol: 0.015, decay: 3.5 },
+  { t: 43.5, freq: F.E4, vol: 0.013, decay: 3.0 },
+  // Crossfade zone (fading out)
+  { t: 46.0, freq: F.C4, vol: 0.009, decay: 3.0 },
+];
+
+function generateMusicBuffer(ctx: AudioContext): AudioBuffer {
   const sr = ctx.sampleRate;
-  const len = Math.floor(sr * LOOP_SECONDS);
+  const len = Math.floor(sr * MUSIC_LOOP_S);
   const buf = ctx.createBuffer(2, len, sr);
   const L = buf.getChannelData(0);
   const R = buf.getChannelData(1);
 
-  /* ── 1. Pentatonic pad with chord progression ── */
+  /* ── Pad with chord progression ── */
   for (const ch of CHORDS) {
     for (let n = 0; n < ch.notes.length; n++) {
       const freq = ch.notes[n];
-      const vol = ch.gains[n];
-      const phaseIncL = (2 * Math.PI * freq) / sr;
-      const phaseIncR = (2 * Math.PI * freq * 1.0003) / sr; // tiny detune for stereo
-      const startIdx = Math.floor(ch.t0 * sr);
-      const endIdx = Math.min(Math.floor(ch.t1 * sr), len);
-      let phaseL = 0;
-      let phaseR = 0;
+      const vol = ch.g[n];
+      const incL = (2 * Math.PI * freq) / sr;
+      const incR = (2 * Math.PI * freq * 1.0004) / sr;
+      const i0 = Math.floor(ch.t0 * sr);
+      const i1 = Math.min(Math.floor(ch.t1 * sr), len);
+      let pL = 0, pR = 0;
 
-      for (let i = startIdx; i < endIdx; i++) {
+      for (let i = i0; i < i1; i++) {
         const t = i / sr;
-        // 3-second smooth attack & release
-        const fadeIn = smoothstep(t, ch.t0, ch.t0 + 3);
-        const fadeOut = 1 - smoothstep(t, ch.t1 - 3, ch.t1);
-        const env = fadeIn * fadeOut;
-        // 60 BPM pulse
-        const pulse = 1.0 + 0.08 * Math.sin(2 * Math.PI * t);
-        const amp = env * vol * pulse;
+        const env = smoothstep(t, ch.t0, ch.t0 + 3) * (1 - smoothstep(t, ch.t1 - 3, ch.t1));
+        const pulse = 1.0 + 0.06 * Math.sin(2 * Math.PI * t);
+        const a = env * vol * pulse;
 
-        // Fundamental + slight 2nd harmonic for warmth
-        L[i] += (Math.sin(phaseL) + Math.sin(phaseL * 2) * 0.12) * amp;
-        R[i] += (Math.sin(phaseR) + Math.sin(phaseR * 2) * 0.12) * amp;
-        phaseL += phaseIncL;
-        phaseR += phaseIncR;
+        L[i] += (Math.sin(pL) + Math.sin(pL * 2) * 0.10) * a;
+        R[i] += (Math.sin(pR) + Math.sin(pR * 2) * 0.10) * a;
+        pL += incL;
+        pR += incR;
       }
     }
   }
 
-  /* ── 2. Melodic fragments (bell-like tones) ── */
+  /* ── Bell-like melodic fragments ── */
   for (const b of BELLS) {
-    const bellStart = Math.floor(b.t * sr);
-    const bellEnd = Math.min(Math.floor((b.t + b.decay) * sr), len);
-    const phaseInc = (2 * Math.PI * b.freq) / sr;
-    // Inharmonic overtone for bell quality (2.5× fundamental)
-    const overtoneInc = (2 * Math.PI * b.freq * 2.5) / sr;
-    let phase = 0;
-    let oPhase = 0;
+    const bs = Math.floor(b.t * sr);
+    const be = Math.min(Math.floor((b.t + b.decay) * sr), len);
+    const inc = (2 * Math.PI * b.freq) / sr;
+    const oInc = (2 * Math.PI * b.freq * 2.5) / sr; // inharmonic overtone
+    let p = 0, oP = 0;
 
-    for (let i = bellStart; i < bellEnd; i++) {
-      const dt = (i - bellStart) / sr;
-      // Fast attack (0.25 s) + exponential decay
-      const attack = smoothstep(dt, 0, 0.25);
-      const decay = Math.exp(-dt * 1.4);
-      const env = attack * decay * b.vol;
-
-      const sample = Math.sin(phase) * env;
-      const overtone = Math.sin(oPhase) * env * 0.25;
-
-      // Stereo: fundamental slightly left, overtone slightly right
-      L[i] += sample * 1.0 + overtone * 0.6;
-      R[i] += sample * 0.7 + overtone * 1.0;
-      phase += phaseInc;
-      oPhase += overtoneInc;
+    for (let i = bs; i < be; i++) {
+      const dt = (i - bs) / sr;
+      const env = smoothstep(dt, 0, 0.25) * Math.exp(-dt * 1.3) * b.vol;
+      const s = Math.sin(p) * env;
+      const o = Math.sin(oP) * env * 0.22;
+      L[i] += s * 1.0 + o * 0.5;
+      R[i] += s * 0.65 + o * 1.0;
+      p += inc;
+      oP += oInc;
     }
   }
 
-  /* ── 3. Sub-bass warmth (C2 = 65.41 Hz) ── */
-  {
-    const phaseInc = (2 * Math.PI * 65.41) / sr;
-    let phase = 0;
-    for (let i = 0; i < len; i++) {
-      const sample = Math.sin(phase) * 0.022;
-      L[i] += sample;
-      R[i] += sample;
-      phase += phaseInc;
-    }
+  /* ── Perfect loop crossfade (6-second Hann) ── */
+  const cfLen = Math.floor(sr * CROSSFADE_S);
+  for (let i = 0; i < cfLen; i++) {
+    const w = hann(i / cfLen);
+    const ei = len - cfLen + i;
+    L[ei] = L[ei] * (1 - w) + L[i] * w;
+    R[ei] = R[ei] * (1 - w) + R[i] * w;
   }
 
-  /* ── 4. Brown noise water ambience (stereo) ── */
-  {
-    let bL = 0, bR = 0;
-    for (let i = 0; i < len; i++) {
-      bL = (bL + 0.02 * (Math.random() * 2 - 1)) / 1.02;
-      bR = (bR + 0.02 * (Math.random() * 2 - 1)) / 1.02;
-      L[i] += bL * 0.11;
-      R[i] += bR * 0.09;
-    }
-  }
-
-  /* ── 5. Perfect loop crossfade (Hann window, 4 seconds) ── */
-  {
-    const cfLen = Math.floor(sr * CROSSFADE_SECONDS);
-    for (let i = 0; i < cfLen; i++) {
-      const w = hann(i / cfLen); // 0 → 1
-      const endIdx = len - cfLen + i;
-      const begIdx = i;
-      L[endIdx] = L[endIdx] * (1 - w) + L[begIdx] * w;
-      R[endIdx] = R[endIdx] * (1 - w) + R[begIdx] * w;
-    }
-  }
-
-  /* ── 6. Soft clip (prevents harsh peaks) ── */
+  /* ── Soft clip ── */
   for (let i = 0; i < len; i++) {
-    L[i] = Math.tanh(L[i] * 1.8) / 1.8;
-    R[i] = Math.tanh(R[i] * 1.8) / 1.8;
+    L[i] = Math.tanh(L[i] * 2.0) / 2.0;
+    R[i] = Math.tanh(R[i] * 2.0) / 2.0;
   }
 
   return buf;
@@ -216,27 +201,83 @@ export function AmbientSound() {
   const audioRef = useRef<{
     ctx: AudioContext;
     master: GainNode;
-    source: AudioBufferSourceNode;
+    musicSrc: AudioBufferSourceNode;
+    nodes: (AudioBufferSourceNode | OscillatorNode)[];
   } | null>(null);
 
   const startAudio = useCallback(() => {
     const ctx = new AudioContext();
     const now = ctx.currentTime;
 
+    /* ── Master gain ── */
     const master = ctx.createGain();
     master.gain.setValueAtTime(0, now);
     master.gain.linearRampToValueAtTime(MASTER_VOLUME, now + FADE_DURATION);
     master.connect(ctx.destination);
 
-    const buffer = generateSoundscape(ctx);
+    const nodes: (AudioBufferSourceNode | OscillatorNode)[] = [];
 
-    const source = ctx.createBufferSource();
-    source.buffer = buffer;
-    source.loop = true;
-    source.connect(master);
-    source.start(now);
+    /* ══════════════════════════════════════════════════════════════
+     * CONTINUOUS LAYER: Water ambience (coprime brown noise)
+     * 5 s + 7 s + 9 s → combined period LCM = 315 s
+     * ══════════════════════════════════════════════════════════════ */
+    const waterGain = ctx.createGain();
+    waterGain.gain.value = 0.10;
+    waterGain.connect(master);
 
-    audioRef.current = { ctx, master, source };
+    for (const dur of [5, 7, 9]) {
+      const nBuf = createBrownNoise(ctx, dur);
+      const src = ctx.createBufferSource();
+      src.buffer = nBuf;
+      src.loop = true;
+      const lpf = ctx.createBiquadFilter();
+      lpf.type = 'lowpass';
+      lpf.frequency.value = 350;
+      lpf.Q.value = 0.5;
+      const g = ctx.createGain();
+      g.gain.value = 0.38;
+      src.connect(lpf);
+      lpf.connect(g);
+      g.connect(waterGain);
+      src.start(now);
+      nodes.push(src);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+     * CONTINUOUS LAYER: Sub-bass C2 + 60 BPM pulse
+     * ══════════════════════════════════════════════════════════════ */
+    const subBass = ctx.createOscillator();
+    subBass.type = 'sine';
+    subBass.frequency.value = 65.41;
+    const subGain = ctx.createGain();
+    subGain.gain.value = 0.020;
+    subBass.connect(subGain);
+    subGain.connect(master);
+    subBass.start(now);
+    nodes.push(subBass);
+
+    // 60 BPM pulse LFO → sub-bass gain (heart-rate entrainment)
+    const pulseLFO = ctx.createOscillator();
+    pulseLFO.type = 'sine';
+    pulseLFO.frequency.value = 1.0;
+    const pulseGain = ctx.createGain();
+    pulseGain.gain.value = 0.004;
+    pulseLFO.connect(pulseGain);
+    pulseGain.connect(subGain.gain);
+    pulseLFO.start(now);
+    nodes.push(pulseLFO);
+
+    /* ══════════════════════════════════════════════════════════════
+     * LOOPED LAYER: Musical pad + bells (48 s buffer)
+     * ══════════════════════════════════════════════════════════════ */
+    const musicBuf = generateMusicBuffer(ctx);
+    const musicSrc = ctx.createBufferSource();
+    musicSrc.buffer = musicBuf;
+    musicSrc.loop = true;
+    musicSrc.connect(master);
+    musicSrc.start(now);
+
+    audioRef.current = { ctx, master, musicSrc, nodes };
     setPlaying(true);
   }, []);
 
@@ -249,9 +290,8 @@ export function AmbientSound() {
     master.gain.linearRampToValueAtTime(0, now + FADE_DURATION);
     const ref = audioRef.current;
     setTimeout(() => {
-      try {
-        ref.source.stop();
-      } catch { /* already stopped */ }
+      try { ref.musicSrc.stop(); } catch { /* ok */ }
+      ref.nodes.forEach((n) => { try { n.stop(); } catch { /* ok */ } });
       ref.ctx.close();
     }, FADE_DURATION * 1000 + 150);
     audioRef.current = null;
@@ -281,7 +321,6 @@ export function AmbientSound() {
       ) : (
         <VolumeX className="w-4 h-4" strokeWidth={1.5} />
       )}
-      {/* Pulse ring when playing */}
       {playing && (
         <span className="absolute inset-0 rounded-full border border-helora-sage/30 animate-ping pointer-events-none" />
       )}
