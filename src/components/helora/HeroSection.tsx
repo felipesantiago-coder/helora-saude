@@ -52,8 +52,9 @@ export function HeroSection() {
     let curr = new Float32Array(W * H);
     let prev = new Float32Array(W * H);
 
-    const DAMPING = 0.988;
-    const SPEED = 0.18; // wave propagation speed (0.5 = max, lower = slower)
+    const DAMPING = 0.992;
+    const C2 = 0.12; // c² — wave speed squared (0.5 = max stable, lower = slower)
+    const CENTER = 2 - 4 * C2; // coefficient for current cell (= 1.52)
     const DROP_RADIUS = 5;
     const DROP_STRENGTH = 12;
     const DROP_THROTTLE = 100; // ms
@@ -96,14 +97,22 @@ export function HeroSection() {
       }
     }
 
-    /* ── Wave equation propagation ── */
+    /* ── Wave equation propagation (correct 2D discrete form) ── */
+    // u_new = CENTER * u_curr + C2 * (neighbors) - u_prev, then * DAMPING
+    // This is the full discrete wave equation — omitting the CENTER term
+    // (as in the classic 0.5 shortcut) only works when c² = 0.5.
     function propagate() {
       for (let y = 1; y < H - 1; y++) {
         const yw = y * W;
         for (let x = 1; x < W - 1; x++) {
           const i = yw + x;
           prev[i] =
-            ((curr[i - 1] + curr[i + 1] + curr[i - W] + curr[i + W]) * SPEED -
+            (CENTER * curr[i] +
+              C2 *
+                (curr[i - 1] +
+                  curr[i + 1] +
+                  curr[i - W] +
+                  curr[i + W]) -
               prev[i]) *
             DAMPING;
         }
