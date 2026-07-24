@@ -64,7 +64,7 @@ export function Header() {
         {/* Logo + subtitle */}
         <button
           onClick={() => scrollToSection('#hero')}
-          className="focus:outline-none transition-all duration-300 flex flex-col items-start"
+          className="focus:outline-none transition-all duration-300 inline-flex flex-col items-center"
           aria-label="Voltar ao início"
         >
           <img
