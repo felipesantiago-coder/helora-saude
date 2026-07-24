@@ -70,14 +70,16 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 relative z-10">
           {/* Logo & description */}
           <div>
-            <img
-              src="/logo-mark.svg"
-              alt="Helora"
-              className="h-8 sm:h-10 w-auto brightness-0 invert"
-            />
-            <p className="font-sans text-helora-gainsboro/80 text-sm mt-1 tracking-wider uppercase">
-              saúde integrada
-            </p>
+            <div className="inline-flex flex-col items-center">
+              <img
+                src="/logo-mark.svg"
+                alt="Helora"
+                className="h-8 sm:h-10 w-auto shrink-0 brightness-0 invert"
+              />
+              <p className="w-full text-center font-sans text-helora-gainsboro/80 text-sm mt-1 tracking-wider uppercase">
+                saúde integrada
+              </p>
+            </div>
             <p className="font-sans text-helora-gainsboro/70 text-sm mt-3 leading-relaxed">
               Cuidar de você é nossa essência.
             </p>

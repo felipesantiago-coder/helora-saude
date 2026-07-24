@@ -71,13 +71,13 @@ export function Header() {
             src="/logo-mark.svg"
             alt="Helora"
             className={
-              'h-6 sm:h-7 w-auto transition-all duration-300 ' +
+              'h-6 sm:h-7 w-auto shrink-0 transition-all duration-300 ' +
               (isTransparent ? 'brightness-0 invert' : 'brightness-0')
             }
           />
           <span
             className={
-              'font-sans text-[9px] sm:text-[10px] tracking-[0.15em] uppercase leading-none mt-1.5 transition-colors duration-300 ' +
+              'w-full text-center font-sans text-[9px] sm:text-[10px] tracking-[0.15em] uppercase leading-none mt-1.5 transition-colors duration-300 ' +
               (isTransparent ? 'text-white/60' : 'text-helora-tan')
             }
           >
