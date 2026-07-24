@@ -19,7 +19,7 @@ function scrollToSection(href: string) {
 
 export function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-[#283106] to-[#1a2004] text-white mt-auto relative overflow-hidden">
+    <footer className="bg-gradient-to-br from-[#283107] to-[#141E03] text-white mt-auto relative overflow-hidden">
       {/* Forest layer: Roots — branching downward patterns, deep earth */}
       <OrganicNatureBg variant="roots" />
 
@@ -35,7 +35,7 @@ export function Footer() {
           {/* Background fill layer */}
           <path
             d="M0 30 Q180 65, 360 45 Q540 25, 720 50 Q900 75, 1080 40 Q1260 10, 1440 35 L1440 80 L0 80 Z"
-            fill="#283106"
+            fill="#283107"
           />
           {/* Subtle sage highlight on the edge */}
           <path
