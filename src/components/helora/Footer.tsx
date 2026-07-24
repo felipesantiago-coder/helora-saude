@@ -1,7 +1,5 @@
 'use client';
 
-import { OrganicNatureBg } from './OrganicNatureBg';
-
 const FOOTER_LINKS = [
   { label: 'Início', href: '#hero' },
   { label: 'Conceito', href: '#conceito' },
@@ -19,10 +17,7 @@ function scrollToSection(href: string) {
 
 export function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-[#283107] to-[#141E03] text-white mt-auto relative overflow-hidden">
-      {/* Forest layer: Roots — branching downward patterns, deep earth */}
-      <OrganicNatureBg variant="roots" />
-
+    <footer className="bg-gradient-to-b from-[#141E03] to-[#283107] text-white mt-auto relative overflow-hidden">
       {/* Organic nature wave top — multi-layered flowing curves */}
       <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] -translate-y-[99%]" aria-hidden="true">
         <svg
