@@ -99,7 +99,7 @@ export function Footer() {
 
         {/* Bottom bar */}
         <div className="border-t border-helora-sage/10 pt-5 mt-10 text-center relative z-10">
-          <p className="font-sans text-xs text-helora-tan/60">
+          <p className="font-sans text-xs text-helora-gainsboro/60">
             © 2024 Helora. Todos os direitos reservados.
           </p>
         </div>

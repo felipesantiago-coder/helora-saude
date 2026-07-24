@@ -9,7 +9,7 @@
   --color-helora-sage: #777F5C;
   --color-helora-sienna: #9C6146;
   --color-helora-dark-coffee: #2C241C;
-  --color-helora-tan: #A39B82;
+  --color-helora-tan: #6B6050;
   --color-helora-light-gray: #C7C3AC;
   --color-helora-gainsboro: #DFE0DB;
   --color-helora-antique-white: #EBE6CC;
@@ -27,7 +27,7 @@
   --color-secondary: #DFE0DB;
   --color-secondary-foreground: #2C241C;
   --color-muted: #DFE0DB;
-  --color-muted-foreground: #A39B82;
+  --color-muted-foreground: #6B6050;
   --color-accent: #EBE6CC;
   --color-accent-foreground: #2C241C;
   --color-destructive: #9C6146;
@@ -60,7 +60,7 @@
   --color-chart-2: #283106;
   --color-chart-3: #777F5C;
   --color-chart-4: #9C6146;
-  --color-chart-5: #A39B82;
+  --color-chart-5: #6B6050;
 }
 
 /* ── Runtime CSS variables (for non-Tailwind usage) ── */
@@ -69,7 +69,7 @@
   --helora-sage: #777F5C;
   --helora-sienna: #9C6146;
   --helora-dark-coffee: #2C241C;
-  --helora-tan: #A39B82;
+  --helora-tan: #6B6050;
   --helora-light-gray: #C7C3AC;
   --helora-gainsboro: #DFE0DB;
   --helora-antique-white: #EBE6CC;

@@ -397,7 +397,7 @@ export function HeroSection() {
         </motion.h1>
 
         <motion.p
-          className="font-sans text-helora-gainsboro/60 text-[0.938rem] sm:text-base md:text-[1.063rem] max-w-md mx-auto mb-10 leading-relaxed"
+          className="font-sans text-helora-gainsboro/80 text-[0.938rem] sm:text-base md:text-[1.063rem] max-w-md mx-auto mb-10 leading-relaxed"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: [0.25, 0.1, 0.25, 1], delay: 0.5 }}
@@ -424,7 +424,7 @@ export function HeroSection() {
                 .getElementById('equipe')
                 ?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="font-sans font-medium text-sm text-helora-gainsboro/60 hover:text-white/90 border border-helora-gainsboro/15 hover:border-helora-gainsboro/35 rounded-full px-6 py-2.5 sm:py-3 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50"
+            className="font-sans font-medium text-sm text-helora-gainsboro/80 hover:text-white/90 border border-helora-gainsboro/20 hover:border-helora-gainsboro/40 rounded-full px-6 py-2.5 sm:py-3 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-helora-sage/50"
           >
             Conheça a equipe
           </button>
